@@ -33,16 +33,10 @@ public class StudentPortal extends JFrame {
 
     public StudentPortal() {
         // Initialize student data for different cards (customize as needed)
-        studentMap.put("CARD1", new StudentData("John Doe", "123456", "john.doe@example.com", "123-456-7890", 
+        studentMap.put("CARD1", new StudentData("Harshit Gupta ", "Btechcse", "harshit.gupta@example.com", "9998881112", 
             new String[]{"Book 1: Java Programming", "Book 2: Data Structures"}));
-        studentMap.put("CARD2", new StudentData("Jane Smith", "654321", "jane.smith@example.com", "987-654-3210", 
-            new String[]{"Book 3: Algorithms", "Book 4: AI Basics"}));
-        studentMap.put("CARD3", new StudentData("Alice Johnson", "789012", "alice.johnson@example.com", "555-123-4567", 
-            new String[]{"Book 5: Networking", "Book 6: Security"}));
-        studentMap.put("CARD4", new StudentData("Bob Wilson", "345678", "bob.wilson@example.com", "888-987-6543", 
-            new String[]{"Book 7: Databases", "Book 8: Web Development"}));
         // Default for unrecognized cards (updated with your details)
-        studentMap.put("DEFAULT", new StudentData("Harshit Gupta", "B.techCS", "123455@gmail.com", "887567852", 
+        studentMap.put("DEFAULT", new StudentData("Bhasker", "B.techECE", "123455@gmail.com", "887567852", 
             new String[]{"java language", "oops"}));
 
         // Initial login screen
@@ -221,4 +215,5 @@ public class StudentPortal extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new StudentPortal());
     }
+
 }
