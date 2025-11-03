@@ -2,6 +2,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
+import java.io.File;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class LibraryManagementSystem {
 
@@ -11,7 +13,32 @@ public class LibraryManagementSystem {
     private static boolean isLocked = false;
     private static String currentAdmin = "";
 
-    // Initialize with a default admin for demo (you can remove this later)
+    // Store students: RFID ID -> Student object
+    private static Map<String, Student> students = new HashMap<>();
+
+    // Student class to hold details
+    static class Student {
+        String name, fatherName, motherName, universityId, rollNo, gender, contactNo, address, course, branch, photoPath;
+        public Student(String name, String fatherName, String motherName, String universityId, String rollNo, String gender, String contactNo, String address, String course, String branch, String photoPath) {
+            this.name = name;
+            this.fatherName = fatherName;
+            this.motherName = motherName;
+            this.universityId = universityId;
+            this.rollNo = rollNo;
+            this.gender = gender;
+            this.contactNo = contactNo;
+            this.address = address;
+            this.course = course;
+            this.branch = branch;
+            this.photoPath = photoPath;
+        }
+        @Override
+        public String toString() {
+            return "Name: " + name + ", University ID: " + universityId + ", Roll No: " + rollNo;
+        }
+    }
+
+    // Initialize default admin for demo
     static {
         registeredAdmins.put("admin", "password");
     }
@@ -33,7 +60,7 @@ public class LibraryManagementSystem {
 
         public LoginPage() {
             setTitle("Admin Login - Library Management System");
-            setSize(400, 360); // Increased height for buttons
+            setSize(400, 360);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             setLocationRelativeTo(null);
             setLayout(new GridBagLayout());
@@ -60,8 +87,9 @@ public class LibraryManagementSystem {
             showPasswordCheckBox = new JCheckBox("Show Password");
             showPasswordCheckBox.addActionListener(e -> {
                 if (showPasswordCheckBox.isSelected()) {
-                    passwordField.setEchoChar((char) 0);
-                } else {
+                    passwordField.setEchoChar((char)0);
+                }
+                else {
                     passwordField.setEchoChar('*');
                 }
             });
@@ -86,7 +114,7 @@ public class LibraryManagementSystem {
             loginButton.addActionListener(new LoginAction());
             add(loginButton, gbc);
 
-            // Register Button - Open the Register Dialog here
+            // Register Button
             gbc.gridx = 1;
             registerButton = new JButton("Register New Admin");
             registerButton.addActionListener(e -> new RegisterDialog(null).setVisible(true));
@@ -97,7 +125,7 @@ public class LibraryManagementSystem {
             backToHomeButton = new JButton("Back to User Login");
             backToHomeButton.addActionListener(e -> {
                 dispose();
-                // You can add code here to show user login window
+                // You can add user login window here
             });
             add(backToHomeButton, gbc);
 
@@ -155,7 +183,6 @@ public class LibraryManagementSystem {
         }
     }
 
-    // Updated RegisterDialog class merged as requested:
     static class RegisterDialog extends JDialog {
         private JTextField newIdField;
         private JPasswordField newPasswordField;
@@ -172,28 +199,24 @@ public class LibraryManagementSystem {
             gbc.insets = new Insets(10, 10, 10, 10);
             gbc.fill = GridBagConstraints.HORIZONTAL;
 
-            // New Admin ID Label and TextField
             gbc.gridx = 0; gbc.gridy = 0;
             add(new JLabel("New Admin ID:"), gbc);
             gbc.gridx = 1;
             newIdField = new JTextField(20);
             add(newIdField, gbc);
 
-            // Password Label and PasswordField
             gbc.gridx = 0; gbc.gridy = 1;
             add(new JLabel("Password:"), gbc);
             gbc.gridx = 1;
             newPasswordField = new JPasswordField(20);
             add(newPasswordField, gbc);
 
-            // Confirm Password Label and PasswordField
             gbc.gridx = 0; gbc.gridy = 2;
             add(new JLabel("Confirm Password:"), gbc);
             gbc.gridx = 1;
             confirmPasswordField = new JPasswordField(20);
             add(confirmPasswordField, gbc);
 
-            // Buttons Panel with Register and Cancel
             gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
             JButton registerBtn = new JButton("Register");
@@ -202,7 +225,6 @@ public class LibraryManagementSystem {
             buttonPanel.add(cancelBtn);
             add(buttonPanel, gbc);
 
-            // Register button action
             registerBtn.addActionListener(e -> {
                 String id = newIdField.getText().trim();
                 String password = new String(newPasswordField.getPassword());
@@ -210,41 +232,39 @@ public class LibraryManagementSystem {
 
                 if (id.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
                     JOptionPane.showMessageDialog(RegisterDialog.this,
-                            "Please fill all fields.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                        "Please fill all fields.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 if (!password.equals(confirm)) {
                     JOptionPane.showMessageDialog(RegisterDialog.this,
-                            "Passwords do not match.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                        "Passwords do not match.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 if (registeredAdmins.containsKey(id)) {
                     JOptionPane.showMessageDialog(RegisterDialog.this,
-                            "Admin ID already exists.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                        "Admin ID already exists.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 registeredAdmins.put(id, password);
                 JOptionPane.showMessageDialog(RegisterDialog.this,
-                        "Registration successful!", "Success",
-                        JOptionPane.INFORMATION_MESSAGE);
+                    "Registration successful!", "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
                 if (onSuccess != null) {
                     onSuccess.run();
                 }
                 dispose();
             });
 
-            // Cancel button action simply closes dialog
             cancelBtn.addActionListener(e -> dispose());
 
-            pack(); // Auto-size dialog based on content
-            setLocationRelativeTo(null); // Center on screen
+            pack();
+            setLocationRelativeTo(null);
         }
     }
 
-    // Rest of the classes remain unchanged (AdminDashboard, ManageAdminsDialog etc.)
     static class AdminDashboard extends JFrame {
         public AdminDashboard() {
             setTitle("Admin Dashboard - Library Management System");
@@ -253,13 +273,13 @@ public class LibraryManagementSystem {
             setLocationRelativeTo(null);
             setLayout(new BorderLayout());
 
-            // Header / Navigation Bar
             JPanel headerPanel = new JPanel(new BorderLayout());
             headerPanel.setBackground(Color.LIGHT_GRAY);
             headerPanel.setPreferredSize(new Dimension(1000, 50));
             JLabel libraryName = new JLabel("Library Management System");
             libraryName.setFont(new Font("Arial", Font.BOLD, 20));
             headerPanel.add(libraryName, BorderLayout.WEST);
+
             JPanel adminPanel = new JPanel(new FlowLayout());
             adminPanel.add(new JLabel("Admin: " + currentAdmin));
             JButton logoutButton = new JButton("Logout");
@@ -271,11 +291,9 @@ public class LibraryManagementSystem {
             headerPanel.add(adminPanel, BorderLayout.EAST);
             add(headerPanel, BorderLayout.NORTH);
 
-            // Main Content Panel (Summary and buttons)
             JPanel mainPanel = new JPanel(new GridLayout(2, 2, 10, 10));
             mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-            // Overview Cards (Summary Stats)
             JPanel overviewPanel = new JPanel(new GridLayout(3, 2, 5, 5));
             overviewPanel.setBorder(BorderFactory.createTitledBorder("Overview"));
             overviewPanel.add(new JLabel("Total Books: 1000"));
@@ -286,18 +304,14 @@ public class LibraryManagementSystem {
             overviewPanel.add(new JLabel("Fines Collected: ₹5000"));
             mainPanel.add(overviewPanel);
 
-            // Book Management
             JPanel bookPanel = new JPanel(new GridLayout(3, 1, 5, 5));
             bookPanel.setBorder(BorderFactory.createTitledBorder("Book Management"));
             JButton addBookButton = new JButton("Add/Edit/Delete Book");
-            JButton categoriesButton = new JButton("Book Categories");
-            JButton recentBooksButton = new JButton("Recently Added Books");
             bookPanel.add(addBookButton);
-            bookPanel.add(categoriesButton);
-            bookPanel.add(recentBooksButton);
+            bookPanel.add(new JButton("Book Categories"));
+            bookPanel.add(new JButton("Recently Added Books"));
             mainPanel.add(bookPanel);
 
-            // Member Management
             JPanel memberPanel = new JPanel(new GridLayout(4, 1, 5, 5));
             memberPanel.setBorder(BorderFactory.createTitledBorder("Member Management"));
             memberPanel.add(new JLabel("Total Members: 500"));
@@ -307,21 +321,18 @@ public class LibraryManagementSystem {
             memberPanel.add(manageMembersButton);
             mainPanel.add(memberPanel);
 
-            // Issue/Return Records
-            JPanel issuePanel = new JPanel(new GridLayout(4, 1, 5, 5));
-            issuePanel.setBorder(BorderFactory.createTitledBorder("Issue/Return Records"));
-            issuePanel.add(new JLabel("Currently Issued: 200"));
-            issuePanel.add(new JLabel("Due Dates: Check List"));
-            issuePanel.add(new JLabel("Pending Returns: 50"));
-            JButton fineCalcButton = new JButton("Fine Calculation");
-            issuePanel.add(fineCalcButton);
-            mainPanel.add(issuePanel);
+            JPanel studentPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+            studentPanel.setBorder(BorderFactory.createTitledBorder("Student Management"));
+            studentPanel.add(new JLabel("Total Students: " + students.size()));
+            studentPanel.add(new JLabel("New Registrations: 0")); 
+            studentPanel.add(new JLabel("Blocked/Inactive: 0")); 
+            JButton manageStudentButton = new JButton("Manage");
+            studentPanel.add(manageStudentButton);
+            mainPanel.add(studentPanel);
 
-            // Bottom Panel for other sections
             JPanel bottomPanel = new JPanel(new GridLayout(1, 3, 10, 10));
             bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-            // Notifications/Alerts
             JPanel notificationPanel = new JPanel(new GridLayout(3, 1, 5, 5));
             notificationPanel.setBorder(BorderFactory.createTitledBorder("Notifications/Alerts"));
             notificationPanel.add(new JLabel("Overdue Alerts: 10"));
@@ -329,7 +340,6 @@ public class LibraryManagementSystem {
             notificationPanel.add(new JLabel("New Registrations: 20"));
             bottomPanel.add(notificationPanel);
 
-            // Reports & Analytics
             JPanel reportsPanel = new JPanel(new GridLayout(4, 1, 5, 5));
             reportsPanel.setBorder(BorderFactory.createTitledBorder("Reports & Analytics"));
             reportsPanel.add(new JLabel("Most Issued Books"));
@@ -338,7 +348,6 @@ public class LibraryManagementSystem {
             reportsPanel.add(new JLabel("Fine Collection Graph"));
             bottomPanel.add(reportsPanel);
 
-            // System Settings
             JPanel settingsPanel = new JPanel(new GridLayout(3, 1, 5, 5));
             settingsPanel.setBorder(BorderFactory.createTitledBorder("System Settings"));
             JButton backupButton = new JButton("Backup Database");
@@ -352,7 +361,6 @@ public class LibraryManagementSystem {
             settingsPanel.add(changePassButton);
             bottomPanel.add(settingsPanel);
 
-            // Search Bar
             JPanel searchPanel = new JPanel(new FlowLayout());
             searchPanel.setBorder(BorderFactory.createTitledBorder("Search"));
             JTextField searchField = new JTextField(20);
@@ -361,71 +369,296 @@ public class LibraryManagementSystem {
             searchPanel.add(searchField);
             searchPanel.add(searchButton);
 
-            // Footer
             JPanel footerPanel = new JPanel(new FlowLayout());
             footerPanel.setBackground(Color.LIGHT_GRAY);
-            footerPanel.add(new JLabel("© 2023 Library Management System | Contact Support"));
+            footerPanel.add(new JLabel("© 2025 Library Management System | Contact Support"));
             footerPanel.setPreferredSize(new Dimension(1000, 30));
 
-            // Add to frame
             add(mainPanel, BorderLayout.CENTER);
             add(bottomPanel, BorderLayout.SOUTH);
             add(searchPanel, BorderLayout.EAST);
             add(footerPanel, BorderLayout.SOUTH);
 
-            // Add action listeners for buttons as placeholders
+            manageStudentButton.addActionListener(e -> {
+                new StudentManageDialog(AdminDashboard.this).setVisible(true);
+            });
+
             addBookButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Add/Edit/Delete Book functionality here."));
         }
     }
 
+    // Manage Admins Dialog (placeholder)
     static class ManageAdminsDialog extends JDialog {
-        private DefaultListModel<String> listModel;
-
         public ManageAdminsDialog(Frame parent) {
-            super(parent, "Manage Admin Accounts", true);
+            super(parent, "Manage Admins", true);
+            setSize(400, 300);
+            setLocationRelativeTo(parent);
+            setLayout(new BorderLayout());
+            add(new JLabel("Admin management functionality to be implemented."), BorderLayout.CENTER);
+            JButton close = new JButton("Close");
+            close.addActionListener(e -> dispose());
+            add(close, BorderLayout.SOUTH);
+        }
+    }
+    /*===================================================================================== */
+    static class FacultManageDialog extends JDialog {
+        public StudentManageDialog(Frame parent) {
+            super(parent, "Student Management", true);
+            setSize(300, 150);
+            setLocationRelativeTo(parent);
+            setLayout(new FlowLayout());
+
+            JButton newStudentRegButton = new JButton("New Student Registration");
+            JButton blockInactiveButton = new JButton("Block or Inactive");
+            
+
+            blockInactiveButton.addActionListener(e -> {
+                dispose();
+                new StudentManagementDialog(parent).setVisible(true);
+            });
+
+            newStudentRegButton.addActionListener(e -> {
+                dispose();
+                new RFIDInputDialog(parent).setVisible(true);
+            });
+
+            add(blockInactiveButton);
+            add(newStudentRegButton);
+        }
+    }
+
+    static class StudentManagementDialog extends JDialog {
+        public StudentManagementDialog(Frame parent) {
+            super(parent, "Block or Inactive Students", true);
             setSize(400, 300);
             setLocationRelativeTo(parent);
             setLayout(new BorderLayout());
 
-            // List of admins
-            listModel = new DefaultListModel<>();
-            refreshList();
-            JList<String> adminList = new JList<>(listModel);
-            add(new JScrollPane(adminList), BorderLayout.CENTER);
+            DefaultListModel<String> listModel = new DefaultListModel<>();
+            for (String rfid : students.keySet()) {
+                listModel.addElement(rfid + " - " + students.get(rfid).name);
+            }
+            JList<String> studentList = new JList<>(listModel);
+            add(new JScrollPane(studentList), BorderLayout.CENTER);
 
-            // Buttons
             JPanel buttonPanel = new JPanel(new FlowLayout());
-            JButton addButton = new JButton("Add New Admin");
-            addButton.addActionListener(e -> {
-                Runnable onSuccess = this::refreshList;
-                new RegisterDialog(onSuccess).setVisible(true);
-            });
-            JButton removeButton = new JButton("Remove Selected");
-            removeButton.addActionListener(e -> {
-                String selected = adminList.getSelectedValue();
-                if (selected != null && !selected.equals(currentAdmin)) {
-                    registeredAdmins.remove(selected);
-                    refreshList();
-                    JOptionPane.showMessageDialog(this, "Admin removed.");
+            JButton blockButton = new JButton("Block/Inactive Selected");
+            blockButton.addActionListener(e -> {
+                String selected = studentList.getSelectedValue();
+                if (selected != null) {
+                    String rfid = selected.split(" - ")[0];
+                    students.remove(rfid);
+                    listModel.removeElement(selected);
+                    JOptionPane.showMessageDialog(this, "Student blocked/inactivated.");
                 } else {
-                    JOptionPane.showMessageDialog(this, "Cannot remove yourself or select an admin.");
+                    JOptionPane.showMessageDialog(this, "Select a student.");
                 }
             });
             JButton closeButton = new JButton("Close");
             closeButton.addActionListener(e -> dispose());
-            buttonPanel.add(addButton);
-            buttonPanel.add(removeButton);
+            buttonPanel.add(blockButton);
             buttonPanel.add(closeButton);
             add(buttonPanel, BorderLayout.SOUTH);
         }
+    }
 
-        private void refreshList() {
-            listModel.clear();
-            for (String id : registeredAdmins.keySet()) {
-                listModel.addElement(id);
+    /*===================================================================================== */
+    static class StudentManageDialog extends JDialog {
+        public StudentManageDialog(Frame parent) {
+            super(parent, "Student Management", true);
+            setSize(300, 150);
+            setLocationRelativeTo(parent);
+            setLayout(new FlowLayout());
+
+            JButton newStudentRegButton = new JButton("New Student Registration");
+            JButton blockInactiveButton = new JButton("Block or Inactive");
+            
+
+            blockInactiveButton.addActionListener(e -> {
+                dispose();
+                new StudentManagementDialog(parent).setVisible(true);
+            });
+
+            newStudentRegButton.addActionListener(e -> {
+                dispose();
+                new RFIDInputDialog(parent).setVisible(true);
+            });
+
+            add(blockInactiveButton);
+            add(newStudentRegButton);
+        }
+    }
+
+    static class StudentManagementDialog extends JDialog {
+        public StudentManagementDialog(Frame parent) {
+            super(parent, "Block or Inactive Students", true);
+            setSize(400, 300);
+            setLocationRelativeTo(parent);
+            setLayout(new BorderLayout());
+
+            DefaultListModel<String> listModel = new DefaultListModel<>();
+            for (String rfid : students.keySet()) {
+                listModel.addElement(rfid + " - " + students.get(rfid).name);
             }
+            JList<String> studentList = new JList<>(listModel);
+            add(new JScrollPane(studentList), BorderLayout.CENTER);
+
+            JPanel buttonPanel = new JPanel(new FlowLayout());
+            JButton blockButton = new JButton("Block/Inactive Selected");
+            blockButton.addActionListener(e -> {
+                String selected = studentList.getSelectedValue();
+                if (selected != null) {
+                    String rfid = selected.split(" - ")[0];
+                    students.remove(rfid);
+                    listModel.removeElement(selected);
+                    JOptionPane.showMessageDialog(this, "Student blocked/inactivated.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Select a student.");
+                }
+            });
+            JButton closeButton = new JButton("Close");
+            closeButton.addActionListener(e -> dispose());
+            buttonPanel.add(blockButton);
+            buttonPanel.add(closeButton);
+            add(buttonPanel, BorderLayout.SOUTH);
+        }
+    }
+
+    static class RFIDInputDialog extends JDialog {
+        private JTextField rfidField;
+
+        public RFIDInputDialog(Frame parent) {
+            super(parent, "Enter RFID Card ID", true);
+            setSize(350, 150);
+            setLocationRelativeTo(parent);
+            setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(10, 10, 10, 10);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+            add(new JLabel("Enter RFID Card ID:"), gbc);
+
+            rfidField = new JTextField(20);
+            gbc.gridy = 1; gbc.gridwidth = 2;
+            add(rfidField, gbc);
+
+            JButton submitButton = new JButton("Submit");
+            gbc.gridy = 2; gbc.gridwidth = 1; gbc.gridx = 0;
+            add(submitButton, gbc);
+
+            JButton cancelButton = new JButton("Cancel");
+            gbc.gridx = 1;
+            add(cancelButton, gbc);
+
+            submitButton.addActionListener(e -> {
+                String rfid = rfidField.getText().trim();
+                if (rfid.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter RFID Card ID.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (students.containsKey(rfid)) {
+                    JOptionPane.showMessageDialog(this, "RFID already registered.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Open Student Registration form/dialog here
+                dispose();
+                new StudentRegistrationDialog(parent, rfid).setVisible(true);
+            });
+
+            cancelButton.addActionListener(e -> dispose());
+        }
+    }
+
+    // Simple Student Registration Dialog example
+    static class StudentRegistrationDialog extends JDialog {
+        private JTextField nameField, fatherField, motherField, universityIdField, rollField, genderField, contactField, addressField, courseField, branchField;
+        private String rfidCard;
+
+        public StudentRegistrationDialog(Frame parent, String rfidCard) {
+            super(parent, "Register New Student - RFID: " + rfidCard, true);
+            this.rfidCard = rfidCard;
+            setSize(400, 500);
+            setLocationRelativeTo(parent);
+            setLayout(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5,5,5,5);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            int y=0;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Name:"), gbc);
+            nameField = new JTextField(20);
+            gbc.gridx = 1; add(nameField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Father's Name:"), gbc);
+            fatherField = new JTextField(20);
+            gbc.gridx = 1; add(fatherField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Mother's Name:"), gbc);
+            motherField = new JTextField(20);
+            gbc.gridx = 1; add(motherField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("University ID:"), gbc);
+            universityIdField = new JTextField(20);
+            gbc.gridx = 1; add(universityIdField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Roll No:"), gbc);
+            rollField = new JTextField(20);
+            gbc.gridx = 1; add(rollField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Gender:"), gbc);
+            genderField = new JTextField(20);
+            gbc.gridx = 1; add(genderField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Contact No:"), gbc);
+            contactField = new JTextField(20);
+            gbc.gridx = 1; add(contactField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Address:"), gbc);
+            addressField = new JTextField(20);
+            gbc.gridx = 1; add(addressField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Course:"), gbc);
+            courseField = new JTextField(20);
+            gbc.gridx = 1; add(courseField, gbc); y++;
+
+            gbc.gridx = 0; gbc.gridy = y; add(new JLabel("Branch:"), gbc);
+            branchField = new JTextField(20);
+            gbc.gridx = 1; add(branchField, gbc); y++;
+
+            JButton submitBtn = new JButton("Submit");
+            gbc.gridx = 0; gbc.gridy = y; gbc.gridwidth = 2;
+            add(submitBtn, gbc);
+
+            submitBtn.addActionListener(e -> {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Please enter the student's name.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Can validate other fields similarly
+
+                Student newStudent = new Student(
+                    name,
+                    fatherField.getText().trim(),
+                    motherField.getText().trim(),
+                    universityIdField.getText().trim(),
+                    rollField.getText().trim(),
+                    genderField.getText().trim(),
+                    contactField.getText().trim(),
+                    addressField.getText().trim(),
+                    courseField.getText().trim(),
+                    branchField.getText().trim(),
+                    "" // photoPath left empty here
+                );
+
+                students.put(rfidCard, newStudent);
+                JOptionPane.showMessageDialog(this, "Student registered successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+            });
         }
     }
 }
-
-
