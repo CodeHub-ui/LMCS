@@ -1,0 +1,4 @@
+1. Extract the ZIP folder anywhere.
+2. Double-click run.bat to start Admin Portal.
+3. Make sure Java 21 or higher is installed.
+4. Follow on-screen instructions to login.

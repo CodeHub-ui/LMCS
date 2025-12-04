@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .stats { display: flex; gap: 20px; }
+        .stat { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; flex: 1; }
+        .stat h3 { margin: 0; color: #007bff; }
+        .stat p { margin: 5px 0 0 0; font-size: 24px; }
+        nav { margin-top: 20px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        nav a:hover { text-decoration: underline; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/logout">Logout</a>
+        <h1>Welcome, <span th:text="${adminName}">Admin</span></h1>
+    </div>
+    <div th:if="${error}" class="error" th:text="${error}"></div>
+    <div class="stats">
+        <div class="stat">
+            <h3>Total Books</h3>
+            <p th:text="${totalBooks}">0</p>
+        </div>
+        <div class="stat">
+            <h3>Total Students</h3>
+            <p th:text="${totalStudents}">0</p>
+        </div>
+        <div class="stat">
+            <h3>Total Faculty</h3>
+            <p th:text="${totalFaculty}">0</p>
+        </div>
+        <div class="stat">
+            <h3>Issued Books</h3>
+            <p th:text="${totalIssuedBooks}">0</p>
+        </div>
+    </div>
+    <nav>
+        <a href="/books">Manage Books</a>
+        <a href="/students">Manage Students</a>
+        <a href="/faculty">Manage Faculty</a>
+        <a href="/issued-books">View Issued Books</a>
+    </nav>
+</body>
+</html>
