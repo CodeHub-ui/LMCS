@@ -70,12 +70,16 @@ public class StudentDAO {
     // Search student by name or ID
     // ============================
     public List<Student> searchStudents(String query) {
-        String sql = "SELECT * FROM students WHERE name LIKE ? OR student_id LIKE ?";
+        String sql = "SELECT * FROM students WHERE LOWER(name) LIKE LOWER(?) OR LOWER(student_id) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?) OR LOWER(mobile) LIKE LOWER(?) OR LOWER(course) LIKE LOWER(?)";
         List<Student> students = new ArrayList<>();
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, "%" + query + "%");
-            stmt.setString(2, "%" + query + "%");
+            String searchPattern = query + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
+            stmt.setString(4, searchPattern);
+            stmt.setString(5, searchPattern);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Student s = new Student();

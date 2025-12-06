@@ -1,3 +1,4 @@
+
 package com.library.controller;
 
 import com.library.dao.BookDAO;
@@ -6,7 +7,7 @@ import com.library.model.Book;
 import com.library.model.Category;
 import com.library.model.Session;
 import com.library.util.UIUtil;
-import com.library.util.UILayoutConstants; 
+import com.library.util.UILayoutConstants;
 import animatefx.animation.Shake;
 import animatefx.animation.BounceIn;
 import animatefx.animation.Pulse;
@@ -49,11 +50,15 @@ public class BookManagementController {
 
     private ObservableList<Category> filteredCategories = FXCollections.observableArrayList();
 
+    // Add drag selection for range (like desktop file selection)
+    private int dragStartIndex = -1;
+
     public BookManagementController(Stage stage) {
         this.stage = stage;
         loadBooks();
         loadCategories();
         searchField.setPromptText("Search books...");
+        searchField.setStyle("-fx-background-radius: 8; -fx-padding: 8 12 8 12; -fx-pref-width: 300; -fx-font-weight: bold;");
         searchField.textProperty().addListener((observable, oldValue, newValue) -> filterBooks(newValue));
 
         filteredCategories.addAll(categories);
@@ -138,25 +143,109 @@ public class BookManagementController {
         bookForm.getChildren().addAll(formTitle, titleField, authorField, isbnField, quantityField, categoryComboBox, buttonGrid);
 
         // Right side: Book table and categories
-        VBox rightSide = new VBox(15);
+        BorderPane rightSide = new BorderPane();
         rightSide.setPadding(UILayoutConstants.PADDING);
-        rightSide.setAlignment(Pos.TOP_LEFT);
         rightSide.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 4); -fx-pref-width: 600;");
+        rightSide.setFocusTraversable(false);
 
         Label tableTitle = new Label("Books");
         tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #1e293b;");
 
         setupBookTable();
         setupBookTableContextMenu();
+        bookTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         bookTable.setItems(books);
-        bookTable.setOnMouseClicked(e -> selectBook());
+        bookTable.setOnMouseClicked(e -> {
+            // bookTable.requestFocus();  // Removed to fix focus issue and enable proper multiple selection
+            if (e.getClickCount() == 1 && bookTable.getSelectionModel().getSelectedItems().size() == 1) {
+                selectBook();
+            }
+        });
+
+        // Add drag selection for range (like desktop file selection)
+        bookTable.setOnMousePressed(e -> {
+            if (e.getTarget() instanceof TableCell) {
+                TableCell cell = (TableCell) e.getTarget();
+                int row = cell.getIndex();
+                if (e.isSecondaryButtonDown()) {
+                    // Right-click: select the item if not already selected (for context menu)
+                    if (!bookTable.getSelectionModel().isSelected(row)) {
+                        bookTable.getSelectionModel().select(row);
+                    }
+                } else if (!e.isControlDown() && !e.isShiftDown()) {
+                    // Left-click without modifiers: clear and select
+                    bookTable.getSelectionModel().clearSelection();
+                    bookTable.getSelectionModel().select(row);
+                }
+                dragStartIndex = row;
+            }
+        });
+
+        bookTable.setOnMouseDragged(e -> {
+            if (dragStartIndex != -1 && e.getTarget() instanceof TableCell) {
+                TableCell cell = (TableCell) e.getTarget();
+                int currentRow = cell.getIndex();
+                bookTable.getSelectionModel().selectRange(Math.min(dragStartIndex, currentRow), Math.max(dragStartIndex, currentRow) + 1);
+            }
+        });
+
+        bookTable.setOnMouseReleased(e -> {
+            dragStartIndex = -1;  // Reset
+        });
 
         Label categoryTitle = new Label("Manage Categories");
         categoryTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #1e293b;");
 
         categoryListView.setItems(categories);
         categoryListView.setPrefHeight(150);
+        categoryListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setupCategoryContextMenu();
+
+        // Ensure context menu works properly by selecting item on right-click
+        categoryListView.setOnContextMenuRequested(e -> {
+            // Find the item under the mouse cursor
+            int index = categoryListView.getSelectionModel().getSelectedIndex();
+            if (index == -1) {
+                // No item selected, try to find item at mouse position
+                double y = e.getY();
+                int itemHeight = 24; // Approximate item height
+                int clickedIndex = (int) (y / itemHeight);
+                if (clickedIndex >= 0 && clickedIndex < categories.size()) {
+                    categoryListView.getSelectionModel().select(clickedIndex);
+                }
+            }
+        });
+
+        // Add drag selection for range (like desktop file selection) for categories
+        categoryListView.setOnMousePressed(e -> {
+            if (e.getTarget() instanceof ListCell) {
+                ListCell cell = (ListCell) e.getTarget();
+                int row = cell.getIndex();
+                if (e.isSecondaryButtonDown()) {
+                    // Right-click: select the item if not already selected (for context menu)
+                    if (!categoryListView.getSelectionModel().isSelected(row)) {
+                        categoryListView.getSelectionModel().select(row);
+                    }
+                } else if (!e.isControlDown() && !e.isShiftDown()) {
+                    // Left-click without modifiers: clear and select
+                    categoryListView.getSelectionModel().clearSelection();
+                    categoryListView.getSelectionModel().select(row);
+                }
+                dragStartIndex = row;
+            }
+        });
+
+        categoryListView.setOnMouseDragged(e -> {
+            if (dragStartIndex != -1 && e.getTarget() instanceof ListCell) {
+                ListCell cell = (ListCell) e.getTarget();
+                int currentRow = cell.getIndex();
+                categoryListView.getSelectionModel().selectRange(Math.min(dragStartIndex, currentRow), Math.max(dragStartIndex, currentRow) + 1);
+            }
+        });
+
+        categoryListView.setOnMouseReleased(e -> {
+            dragStartIndex = -1;  // Reset
+        });
 
         HBox categoryControls = new HBox(10);
         categoryControls.setAlignment(Pos.CENTER_LEFT);
@@ -166,7 +255,14 @@ public class BookManagementController {
 
         categoryControls.getChildren().addAll(categoryNameField, addCategoryBtn);
 
-        rightSide.getChildren().addAll(tableTitle, searchField, bookTable, categoryTitle, categoryListView, categoryControls);
+        VBox topBox = new VBox(15);
+        topBox.getChildren().addAll(tableTitle, searchField);
+
+        VBox centerBox = new VBox(15);
+        centerBox.getChildren().addAll(bookTable, categoryTitle, categoryListView, categoryControls);
+
+        rightSide.setTop(topBox);
+        rightSide.setCenter(centerBox);
         centerLayout.getChildren().addAll(bookForm, rightSide);
 
         // Apply consistent button styles
@@ -401,49 +497,96 @@ public class BookManagementController {
 
     private void setupBookTableContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
-        MenuItem deleteItem = new MenuItem("Delete");
+        MenuItem deleteItem = new MenuItem("Delete Selected");
         deleteItem.setOnAction(e -> deleteBook());
         contextMenu.getItems().add(deleteItem);
         bookTable.setContextMenu(contextMenu);
     }
 
     private void deleteBook() {
-        Book selected = bookTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            UIUtil.showWarning("No Selection", "Please select a book from the table to delete.");
+        ObservableList<Book> selectedBooks = bookTable.getSelectionModel().getSelectedItems();
+        if (selectedBooks == null || selectedBooks.isEmpty()) {
+            UIUtil.showWarning("No Selection", "Please select one or more books from the table to delete.");
             return;
         }
 
-        UIUtil.showConfirmation("Delete Book", "Are you sure you want to delete the book '" + selected.getName() + "'? This action cannot be undone.",
+        int count = selectedBooks.size();
+        String message = count == 1
+            ? "Are you sure you want to delete the book '" + selectedBooks.get(0).getName() + "'? This action cannot be undone."
+            : "Are you sure you want to delete " + count + " selected books? This action cannot be undone.";
+
+        UIUtil.showConfirmation("Delete Books", message,
             () -> {
                 // This code runs if the user confirms
-                if (bookDAO.deleteBook(selected.getId())) {
-                    loadBooks();
-                    clearForm();
-                    UIUtil.showSuccess("Success", "Book deleted successfully.");
+                int successCount = 0;
+                int failCount = 0;
+                StringBuilder failedBooks = new StringBuilder();
+
+                for (Book book : selectedBooks) {
+                    if (bookDAO.deleteBook(book.getId())) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        if (failedBooks.length() > 0) failedBooks.append(", ");
+                        failedBooks.append(book.getName());
+                    }
+                }
+
+                loadBooks();
+                clearForm();
+
+                if (successCount > 0) {
+                    UIUtil.showSuccess("Success", successCount + " book(s) deleted successfully.");
                     new Pulse(bookTable).play();
-                } else {
-                    UIUtil.showError("Deletion Failed", "Cannot delete a book that is currently issued or has a history.");
+                }
+
+                if (failCount > 0) {
+                    UIUtil.showError("Deletion Failed", "Could not delete " + failCount + " book(s): " + failedBooks.toString() +
+                        ". These books may be currently issued or have a history.");
                 }
             });
     }
 
     private void deleteCategory() {
-        Category selected = categoryListView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            UIUtil.showWarning("No Selection", "Please select a category from the list to delete.");
+        ObservableList<Category> selectedCategories = categoryListView.getSelectionModel().getSelectedItems();
+        if (selectedCategories == null || selectedCategories.isEmpty()) {
+            UIUtil.showWarning("No Selection", "Please select one or more categories from the list to delete.");
             return;
         }
 
-        UIUtil.showConfirmation("Delete Category", "Are you sure you want to delete the category '" + selected.getName() + "'? This may affect books in this category.",
+        int count = selectedCategories.size();
+        String message = count == 1
+            ? "Are you sure you want to delete the category '" + selectedCategories.get(0).getName() + "'? This may affect books in this category."
+            : "Are you sure you want to delete " + count + " selected categories? This may affect books in these categories.";
+
+        UIUtil.showConfirmation("Delete Categories", message,
             () -> {
                 // This code runs if the user confirms
-                if (categoryDAO.deleteCategory(selected.getId())) {
-                    loadCategories();
-                    loadBooks(); // Also reload books as their category might be affected
-                    UIUtil.showSuccess("Success", "Category deleted successfully.");
-                } else {
-                    UIUtil.showError("Deletion Failed", "Cannot delete a category that still contains books.");
+                int successCount = 0;
+                int failCount = 0;
+                StringBuilder failedCategories = new StringBuilder();
+
+                for (Category category : selectedCategories) {
+                    if (categoryDAO.deleteCategory(category.getId())) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        if (failedCategories.length() > 0) failedCategories.append(", ");
+                        failedCategories.append(category.getName());
+                    }
+                }
+
+                loadCategories();
+                loadBooks(); // Also reload books as their category might be affected
+
+                if (successCount > 0) {
+                    UIUtil.showSuccess("Success", successCount + " category(ies) deleted successfully.");
+                    new Pulse(categoryListView).play();
+                }
+
+                if (failCount > 0) {
+                    UIUtil.showError("Deletion Failed", "Could not delete " + failCount + " category(ies): " + failedCategories.toString() +
+                        ". These categories may still contain books.");
                 }
             });
     }

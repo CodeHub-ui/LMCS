@@ -1,4 +1,3 @@
-
 package com.library.dao;
 
 import java.sql.Connection;
@@ -25,7 +24,7 @@ public class DatabaseUtil {
         String user = System.getProperty("db.user", System.getenv().getOrDefault("DB_USER", "postgres"));
         String pass = System.getProperty("db.pass", System.getenv().getOrDefault("DB_PASS", "2005"));
 
-        String url = String.format("jdbc:postgresql://%s:%s/%s?sslmode=require", host, port, name);
+        String url = String.format("jdbc:postgresql://%s:%s/%s?sslmode=require&connectTimeout=30&socketTimeout=30", host, port, name);
 
         try {
             Class.forName("org.postgresql.Driver");
@@ -100,9 +99,6 @@ public class DatabaseUtil {
             // Run migrations for existing tables
             runMigrations(conn);
 
-            // Insert sample data for testing
-            insertSampleData(conn);
-
             System.out.println("Database initialized successfully for Supabase PostgreSQL.");
 
         } catch (SQLException e) {
@@ -134,6 +130,9 @@ public class DatabaseUtil {
             // Add faculty_id column to issued_books table if it doesn't exist
             stmt.execute("ALTER TABLE issued_books ADD COLUMN IF NOT EXISTS faculty_id INT REFERENCES faculty(id)");
 
+            // Add faculty_id column to returned_books table if it doesn't exist
+            stmt.execute("ALTER TABLE returned_books ADD COLUMN IF NOT EXISTS faculty_id INT REFERENCES faculty(id)");
+
             System.out.println("Database migrations completed successfully.");
         } catch (SQLException e) {
             System.err.println("Error running migrations: " + e.getMessage());
@@ -147,24 +146,27 @@ public class DatabaseUtil {
      */
     private static void insertSampleData(Connection conn) {
         try (Statement stmt = conn.createStatement()) {
+            // Clear existing sample data to avoid foreign key conflicts
+            stmt.execute("TRUNCATE TABLE issued_books, returned_books, books, categories, faculty, students, admins RESTART IDENTITY CASCADE");
+
             // Insert sample categories
-            stmt.execute("INSERT INTO categories (name) VALUES ('Fiction') ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO categories (name) VALUES ('Non-Fiction') ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO categories (name) VALUES ('Science') ON CONFLICT DO NOTHING");
+            stmt.execute("INSERT INTO categories (name) VALUES ('Fiction')");
+            stmt.execute("INSERT INTO categories (name) VALUES ('Non-Fiction')");
+            stmt.execute("INSERT INTO categories (name) VALUES ('Science')");
 
             // Insert sample books
-            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('The Great Gatsby', 'F. Scott Fitzgerald', 'BK001', 1, 5) ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('To Kill a Mockingbird', 'Harper Lee', 'BK002', 1, 3) ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('Sapiens', 'Yuval Noah Harari', 'BK003', 2, 4) ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('A Brief History of Time', 'Stephen Hawking', 'BK004', 3, 2) ON CONFLICT DO NOTHING");
+            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('The Great Gatsby', 'F. Scott Fitzgerald', 'BK001', 1, 5)");
+            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('To Kill a Mockingbird', 'Harper Lee', 'BK002', 1, 3)");
+            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('Sapiens', 'Yuval Noah Harari', 'BK003', 2, 4)");
+            stmt.execute("INSERT INTO books (name, author, barcode, category_id, quantity) VALUES ('A Brief History of Time', 'Stephen Hawking', 'BK004', 3, 2)");
 
             // Insert sample students
-            stmt.execute("INSERT INTO students (name, student_id, email, mobile, rfid, course) VALUES ('John Doe', 'STU001', 'john.doe@example.com', '1234567890', 'RFID001', 'Computer Science') ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO students (name, student_id, email, mobile, rfid, course) VALUES ('Jane Smith', 'STU002', 'jane.smith@example.com', '0987654321', 'RFID002', 'Mathematics') ON CONFLICT DO NOTHING");
+            stmt.execute("INSERT INTO students (name, student_id, email, mobile, rfid, course) VALUES ('John Doe', 'STU001', 'john.doe@example.com', '1234567890', 'RFID001', 'Computer Science')");
+            stmt.execute("INSERT INTO students (name, student_id, email, mobile, rfid, course) VALUES ('Jane Smith', 'STU002', 'jane.smith@example.com', '0987654321', 'RFID002', 'Mathematics')");
 
             // Insert sample faculty
-            stmt.execute("INSERT INTO faculty (name, faculty_id, email, mobile, rfid) VALUES ('Dr. Alice Johnson', 'FAC001', 'alice.johnson@example.com', '1112223333', 'RFID003') ON CONFLICT DO NOTHING");
-            stmt.execute("INSERT INTO faculty (name, faculty_id, email, mobile, rfid) VALUES ('Prof. Bob Wilson', 'FAC002', 'bob.wilson@example.com', '4445556666', 'RFID004') ON CONFLICT DO NOTHING");
+            stmt.execute("INSERT INTO faculty (name, faculty_id, email, mobile, rfid) VALUES ('Dr. Alice Johnson', 'FAC001', 'alice.johnson@example.com', '1112223333', 'RFID003')");
+            stmt.execute("INSERT INTO faculty (name, faculty_id, email, mobile, rfid) VALUES ('Prof. Bob Wilson', 'FAC002', 'bob.wilson@example.com', '4445556666', 'RFID004')");
 
             System.out.println("Sample data inserted successfully.");
         } catch (SQLException e) {

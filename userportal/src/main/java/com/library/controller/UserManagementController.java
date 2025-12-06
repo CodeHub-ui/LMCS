@@ -128,7 +128,7 @@ public Scene getScene() {
         }
 
         StackPane mainLayout = new StackPane();
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1512820790803-83ca734da794?ixlib=rb-4.0.3&auto=format&fit=crop&w=1471&q=80'); -fx-background-size: cover;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
 
         VBox centerLayout = new VBox(15);
         centerLayout.setPadding(UILayoutConstants.PADDING);

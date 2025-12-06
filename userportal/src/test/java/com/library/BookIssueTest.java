@@ -21,8 +21,7 @@ public class BookIssueTest {
             DatabaseUtil.initializeDatabase();
             System.out.println("Database initialized with migrations.");
 
-            // Create test data if not exists
-            createTestData();
+
 
             // Test book search
             BookDAO bookDAO = new BookDAO();
@@ -95,45 +94,5 @@ public class BookIssueTest {
         }
     }
 
-    private static void createTestData() {
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            // Insert test book with 2 copies if not exists
-            String insertBook = "INSERT INTO books (name, author, barcode, category_id, quantity, available) " +
-                    "VALUES ('Test Book', 'Test Author', 'TEST001', 1, 2, true) " +
-                    "ON CONFLICT DO NOTHING";
-            try (PreparedStatement stmt = conn.prepareStatement(insertBook)) {
-                stmt.executeUpdate();
-            }
 
-            // Insert test students if not exist
-            String insertStudent1 = "INSERT INTO students (name, student_id, email, mobile, rfid, course, active) " +
-                    "VALUES ('Test Student 1', 'STU001', 'stu1@test.com', '1234567890', 'RFID001', 'CS', true) " +
-                    "ON CONFLICT DO NOTHING";
-            String insertStudent2 = "INSERT INTO students (name, student_id, email, mobile, rfid, course, active) " +
-                    "VALUES ('Test Student 2', 'STU002', 'stu2@test.com', '1234567891', 'RFID002', 'CS', true) " +
-                    "ON CONFLICT DO NOTHING";
-            String insertStudent3 = "INSERT INTO students (name, student_id, email, mobile, rfid, course, active) " +
-                    "VALUES ('Test Student 3', 'STU003', 'stu3@test.com', '1234567892', 'RFID003', 'CS', true) " +
-                    "ON CONFLICT DO NOTHING";
-
-            // Insert test faculty if not exist
-            String insertFaculty = "INSERT INTO faculty (name, faculty_id, email, mobile, rfid, active) " +
-                    "VALUES ('Test Faculty', 'FAC001', 'fac@test.com', '1234567893', 'RFIDFAC', true) " +
-                    "ON CONFLICT DO NOTHING";
-
-            try (PreparedStatement stmt1 = conn.prepareStatement(insertStudent1);
-                 PreparedStatement stmt2 = conn.prepareStatement(insertStudent2);
-                 PreparedStatement stmt3 = conn.prepareStatement(insertStudent3);
-                 PreparedStatement stmtFac = conn.prepareStatement(insertFaculty)) {
-                stmt1.executeUpdate();
-                stmt2.executeUpdate();
-                stmt3.executeUpdate();
-                stmtFac.executeUpdate();
-            }
-
-            System.out.println("Test data created.");
-        } catch (SQLException e) {
-            System.err.println("Error creating test data: " + e.getMessage());
-        }
-    }
 }

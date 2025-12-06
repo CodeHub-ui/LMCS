@@ -28,6 +28,11 @@ import java.util.Properties;
 
 import javafx.beans.property.SimpleStringProperty;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import javafx.application.Platform;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
@@ -43,6 +48,8 @@ public class UserIssueController {
     private ObservableList<Book> selectedBooks = FXCollections.observableArrayList();
 
     private List<Book> issuedBooksList = null;
+    private List<Book> allBooks = new java.util.ArrayList<>();
+    private ScheduledExecutorService debounceExecutor = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Constructor for UserIssueController.
@@ -50,6 +57,15 @@ public class UserIssueController {
      */
     public UserIssueController(Stage stage) {
         this.stage = stage;
+        // Load all available books into memory for fast searching
+        try {
+            allBooks = new BookDAO().getAllBooks().stream()
+                    .filter(Book::isAvailable)
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            System.err.println("Error loading books: " + e.getMessage());
+            allBooks = new java.util.ArrayList<>();
+        }
     }
 
     /**
@@ -61,7 +77,7 @@ public class UserIssueController {
     public Scene getScene() {
         StackPane mainLayout = new StackPane();
         // Padding is now on the contentBox, so it's removed from the main layout.
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
 
         VBox contentBox = new VBox(20);
         contentBox.setPadding(UILayoutConstants.PADDING);
@@ -82,7 +98,7 @@ public class UserIssueController {
         searchField.setPromptText("Search by book name or barcode...");
         searchField.setPrefWidth(660);
         searchField.setPadding(new Insets(12));
-        searchField.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-text-fill: #1e293b;");
+        searchField.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
         searchField.setFocusTraversable(false);
         searchField.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.05), 6, 0, 0, 2));
 
@@ -253,17 +269,35 @@ public class UserIssueController {
 
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             String trimmed = newValue.trim();
+            // Cancel previous debounce task
+            debounceExecutor.shutdownNow();
+            debounceExecutor = Executors.newSingleThreadScheduledExecutor();
+
             if (!trimmed.isEmpty()) {
-                try {
-                    List<Book> books = new BookDAO().searchBooks(trimmed);
-                    if (books.size() > 10) {
-                        books = books.subList(0, 10);
+                // Check for exact barcode match for auto-add
+                Book exactMatch = allBooks.stream()
+                        .filter(book -> book.getBarcode().equals(trimmed))
+                        .findFirst()
+                        .orElse(null);
+                if (exactMatch != null) {
+                    // Auto-add to selected books if not already added
+                    if (selectedBooks.stream().noneMatch(b -> b.getBarcode().equals(trimmed))) {
+                        selectedBooks.add(exactMatch);
                     }
-                    searchResults.setAll(books);
-                } catch (SQLException ex) {
-                    UIUtil.showAlert("Error", "Database error.", Alert.AlertType.ERROR);
-                    searchResults.clear();
+                    // Use Platform.runLater to avoid triggering another change event during current event processing
+                    Platform.runLater(() -> searchField.clear());
+                    return;
                 }
+
+                // Debounce search
+                debounceExecutor.schedule(() -> {
+                    List<Book> results = allBooks.stream()
+                            .filter(book -> book.getName().toLowerCase().contains(trimmed.toLowerCase()) ||
+                                           book.getBarcode().contains(trimmed))
+                            .limit(10)
+                            .collect(Collectors.toList());
+                    searchResults.setAll(results);
+                }, 300, TimeUnit.MILLISECONDS);
             } else {
                 searchResults.clear();
             }
@@ -340,7 +374,7 @@ public class UserIssueController {
         contentBox.getChildren().addAll(heading, message, issuedTable, navBox);
 
         StackPane mainLayout = new StackPane();
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
         mainLayout.getChildren().add(contentBox);
         StackPane.setAlignment(contentBox, Pos.CENTER);
 

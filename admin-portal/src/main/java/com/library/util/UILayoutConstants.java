@@ -14,7 +14,7 @@ public final class UILayoutConstants {
     private UILayoutConstants() {}
 
     // --- Scene Dimensions ---
-    public static final double SCENE_WIDTH = 1280;
+    public static final double SCENE_WIDTH = 1400;
     public static final double SCENE_HEIGHT = 800;
 
     // --- Padding and Alignment ---
@@ -34,30 +34,36 @@ public final class UILayoutConstants {
     // --- Styling Strings (JavaFX CSS) ---
 
     /**
-     * Style for the root container with gradient background.
+     * Style for the root container with background image.
      */
     public static final String FULL_BACKGROUND_STYLE_LIGHT =
-        "-fx-background-color: linear-gradient(to bottom right, #667eea 0%, #764ba2 100%);";
+        "-fx-background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');" +
+        "-fx-background-size: cover;" +
+        "-fx-background-position: center center;" +
+        "-fx-background-repeat: no-repeat;";
 
     public static final String FULL_BACKGROUND_STYLE_DARK =
-        "-fx-background-color: linear-gradient(to bottom right, #2d3748 0%, #1a202c 100%);";
+        "-fx-background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');" +
+        "-fx-background-size: cover;" +
+        "-fx-background-position: center center;" +
+        "-fx-background-repeat: no-repeat;";
 
     /**
      * Style for the main content pane with glassmorphism effect.
      */
     public static final String CONTENT_PANE_STYLE_LIGHT =
-        "-fx-background-color: rgba(255, 255, 255, 0.95);" +
+        "-fx-background-color: rgba(255, 255, 255, 0.3);" +
         "-fx-background-radius: 20px;" +
         "-fx-border-radius: 20px;" +
-        "-fx-border-color: rgba(255, 255, 255, 0.2);" +
+        "-fx-border-color: rgba(255, 255, 255, 0.6);" +
         "-fx-border-width: 1px;" +
         "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 20, 0, 0, 10);";
 
     public static final String CONTENT_PANE_STYLE_DARK =
-        "-fx-background-color: rgba(30, 41, 59, 0.95);" +
+        "-fx-background-color: rgba(30, 41, 59, 0.3);" +
         "-fx-background-radius: 20px;" +
         "-fx-border-radius: 20px;" +
-        "-fx-border-color: rgba(255, 255, 255, 0.1);" +
+        "-fx-border-color: rgba(255, 255, 255, 0.5);" +
         "-fx-border-width: 1px;" +
         "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 20, 0, 0, 10);";
 
@@ -68,9 +74,9 @@ public final class UILayoutConstants {
     public static final String SUBHEADING_STYLE_DARK = "-fx-font-size: 14px; -fx-text-fill: #94a3b8;";
 
     public static final String TEXT_INPUT_STYLE_LIGHT =
-        "-fx-font-size: 14px; -fx-padding: 12; -fx-background-radius: 12; -fx-border-color: #d1d5db; -fx-border-radius: 12; -fx-background-color: #ffffff;";
+        "-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 12; -fx-border-color: #d1d5db; -fx-border-radius: 12; -fx-background-color: #ffffff;";
     public static final String TEXT_INPUT_STYLE_DARK =
-        "-fx-font-size: 14px; -fx-padding: 12; -fx-background-radius: 12; -fx-border-color: #475569; -fx-border-radius: 12; -fx-background-color: #334155; -fx-text-fill: #f1f5f9;";
+        "-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 12; -fx-border-color: #475569; -fx-border-radius: 12; -fx-background-color: #334155; -fx-text-fill: #f1f5f9;";
 
     // --- Button Styles ---
     public static final String PRIMARY_BUTTON_STYLE_LIGHT =

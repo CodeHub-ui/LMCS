@@ -28,6 +28,9 @@ public class UserPortalMain extends Application {
         Scene scene = new UserLoginController(primaryStage).getScene();
         primaryStage.setTitle("User Portal");
         primaryStage.setScene(scene);
+        primaryStage.setWidth(1200);
+        primaryStage.setHeight(850);
+        primaryStage.setResizable(true);
         primaryStage.show();
     }
 

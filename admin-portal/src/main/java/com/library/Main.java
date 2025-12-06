@@ -20,6 +20,9 @@ public class Main extends Application {
         Scene scene = new LoginController(primaryStage).getScene();
         primaryStage.setTitle("Library Management Admin Portal");
         primaryStage.setScene(scene);
+        primaryStage.setWidth(1200);
+        primaryStage.setHeight(850);
+        primaryStage.setResizable(true);
         primaryStage.show();
     }
 

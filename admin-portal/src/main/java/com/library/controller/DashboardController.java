@@ -49,7 +49,7 @@ public class DashboardController {
         card.setSpacing(10);
         card.setPrefSize(220, 100);
         String baseStyle = "-fx-background-color: " + color + "; -fx-background-radius: 12; -fx-cursor: hand;";
-        String hoverStyle = "-fx-background-color: " + color + "CC; -fx-background-radius: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 3);";
+        String hoverStyle = "-fx-background-color: " + color.substring(0, color.length()-2) + "CC; -fx-background-radius: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 3);";
         card.setStyle(baseStyle);
         card.setOnMouseEntered(e -> card.setStyle(hoverStyle));
         card.setOnMouseExited(e -> card.setStyle(baseStyle));
@@ -97,13 +97,13 @@ public class DashboardController {
         }
 
         // Top bar for logout and reload buttons
-        Button logoutBtn = UIUtil.createStyledButton("Logout", "#ef4444", "#dc2626");
+        Button logoutBtn = UIUtil.createStyledButton("Logout", "#d01414ff", "#dc2626");
         logoutBtn.setOnAction(e -> {
             Session.logout();
             UIUtil.switchScene(stage, new LoginController(stage).getScene());
         });
 
-        Button reloadBtn = UIUtil.createStyledButton("🔄 Reload", "#22c55e", "#16a34a");
+        Button reloadBtn = UIUtil.createStyledButton("🔄 Reload", "#07ee5cff", "#009035ff");
         reloadBtn.setOnAction(e -> {
             // Reload the dashboard by switching to a new instance
             UIUtil.switchScene(stage, new DashboardController(stage).getScene());
@@ -162,13 +162,13 @@ public class DashboardController {
         navGrid.setAlignment(Pos.CENTER);
 
         // Create navigation cards using the existing createCard helper method
-        VBox studentCard = createCard("👨‍🎓 Student Management", "#3b82f6", e -> UIUtil.switchScene(stage, new StudentManagementController(stage).getScene()));
-        VBox facultyCard = createCard("👨‍🏫 Faculty Management", "#06b6d4", e -> UIUtil.switchScene(stage, new FacultyManagementController(stage).getScene()));
-        VBox bookCard = createCard("📚 Book Management", "#f97316", e -> UIUtil.switchScene(stage, new BookManagementController(stage).getScene()));
-        VBox trackCard = createCard("🔍 Track Activity", "#10b981", e -> UIUtil.switchScene(stage, new TrackController(stage).getScene()));
-        VBox searchCard = createCard("🔍 Centralized Search", "#ec4899", e -> UIUtil.switchScene(stage, new SearchController(stage).getScene()));
-        VBox profileCard = createCard("👤 Admin Profile", "#6366f1", e -> UIUtil.switchScene(stage, new AdminProfileController(stage).getScene()));
-        VBox cleanupCard = createCard("🧹 Cleanup Records", "#ef4444", e -> {
+        VBox studentCard = createCard("👨‍🎓 Student Management", "#0f48a3ff", e -> UIUtil.switchScene(stage, new StudentManagementController(stage).getScene()));
+        VBox facultyCard = createCard("👨‍🏫 Faculty Management", "#054e5bff", e -> UIUtil.switchScene(stage, new FacultyManagementController(stage).getScene()));
+        VBox bookCard = createCard("📚 Book Management", "#b4520bff", e -> UIUtil.switchScene(stage, new BookManagementController(stage).getScene()));
+        VBox trackCard = createCard("🔍 Track Activity", "#057b53ff", e -> UIUtil.switchScene(stage, new TrackController(stage).getScene()));
+        VBox searchCard = createCard("🔍 Centralized Search", "#af0d5eff", e -> UIUtil.switchScene(stage, new SearchController(stage).getScene()));
+        VBox profileCard = createCard("👤 Admin Profile", "#1014ddff", e -> UIUtil.switchScene(stage, new AdminProfileController(stage).getScene()));
+        VBox cleanupCard = createCard("🧹 Cleanup Records", "#e00808ff", e -> {
             IssuedBookDAO cleanupDAO = new IssuedBookDAO();
             int removed = cleanupDAO.removeOrphanedIssuedBooks();
             if (removed > 0) {

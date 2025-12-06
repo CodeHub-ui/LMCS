@@ -47,73 +47,73 @@ public class FacultyManagementController {
     // Add Clear All Faculty button and handler
     private Button clearAllFacultyBtn = new Button("Clear All Faculty");
 
-public FacultyManagementController(Stage stage) {
-    this.stage = stage;
-    // Show alert or console log to confirm scene construction
-    System.out.println("FacultyManagementController initialized");
-    // You can alternatively use UIUtil.showAlert here if desired, but console log is less intrusive
-    // UIUtil.showAlert("Info", "Faculty Management Scene Loaded", Alert.AlertType.INFORMATION);
+    // Add drag selection for range (like desktop file selection)
+    private int dragStartIndex = -1;
 
-    // Initially load faculty data asynchronously
-    loadFaculty();
+    public FacultyManagementController(Stage stage) {
+        this.stage = stage;
+        // Show alert or console log to confirm scene construction
+        System.out.println("FacultyManagementController initialized");
+        // You can alternatively use UIUtil.showAlert here if desired, but console log is less intrusive
+        // UIUtil.showAlert("Info", "Faculty Management Scene Loaded", Alert.AlertType.INFORMATION);
 
-    // Set prompt text for fields
-    this.nameField.setPromptText("Name");
-    this.idField.setPromptText("Faculty ID");
-    this.emailField.setPromptText("Email");
-    this.mobileField.setPromptText("Mobile");
-    this.rfidField.setPromptText("RFID");
-    this.searchField.setPromptText("Search faculty...");
-    this.searchField.textProperty().addListener((observable, oldValue, newValue) -> filterFaculty(newValue));
+        // Initially load faculty data asynchronously
+        loadFaculty();
 
-    clearAllFacultyBtn.setStyle("-fx-background-color: linear-gradient(#ef4444, #dc2626); -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 10 16 10 16; -fx-cursor: hand;");
-    clearAllFacultyBtn.setOnAction(e -> clearAllFaculty());
-}
+        // Set prompt text for fields
+        this.nameField.setPromptText("Name");
+        this.idField.setPromptText("Faculty ID");
+        this.emailField.setPromptText("Email");
+        this.mobileField.setPromptText("Mobile");
+        this.rfidField.setPromptText("RFID");
+        this.searchField.setPromptText("Search faculty...");
+        this.searchField.textProperty().addListener((observable, oldValue, newValue) -> filterFaculty(newValue));
+
+        clearAllFacultyBtn.setStyle("-fx-background-color: linear-gradient(#ef4444, #dc2626); -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 10 16 10 16; -fx-cursor: hand;");
+        clearAllFacultyBtn.setOnAction(e -> clearAllFaculty());
+    }
 
     public Scene getScene() {
         return getManageScene();
     }
 
-
-
     // ============================
     // Scene 5: Manage Faculty
     // ============================
-private Scene getManageScene() {
-    // Content container with semi-transparent background
-    BorderPane mainLayout = new BorderPane();
+    private Scene getManageScene() {
+        // Content container with semi-transparent background
+        BorderPane mainLayout = new BorderPane();
 
-    // Top bar with back button
-    HBox topBar = new HBox();
-    topBar.setAlignment(Pos.TOP_LEFT);
-    topBar.setPadding(new Insets(0, 0, 10, 0));
+        // Top bar with back button
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.TOP_LEFT);
+        topBar.setPadding(new Insets(0, 0, 10, 0));
 
-    Button backBtn = new Button("⬅ Back to Dashboard");
-    backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;");
-    backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: #f9fafb; -fx-border-color: #374151; -fx-text-fill: #374151; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
-    backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
-    backBtn.setOnAction(e -> UIUtil.switchScene(stage, new DashboardController(stage).getScene()));
+        Button backBtn = new Button("⬅ Back to Dashboard");
+        backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;");
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: #f9fafb; -fx-border-color: #374151; -fx-text-fill: #374151; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
+        backBtn.setOnAction(e -> UIUtil.switchScene(stage, new DashboardController(stage).getScene()));
 
-    topBar.getChildren().add(backBtn);
+        topBar.getChildren().add(backBtn);
 
-    // Center layout
-    HBox centerLayout = new HBox(20);
-    centerLayout.setPadding(UILayoutConstants.PADDING);
-    centerLayout.setAlignment(UILayoutConstants.CENTER_ALIGNMENT);
+        // Center layout
+        HBox centerLayout = new HBox(20);
+        centerLayout.setPadding(UILayoutConstants.PADDING);
+        centerLayout.setAlignment(UILayoutConstants.CENTER_ALIGNMENT);
 
-    // Left side: Faculty form
-    VBox facultyForm = new VBox(15);
-    facultyForm.setPadding(UILayoutConstants.PADDING);
-    facultyForm.setAlignment(Pos.TOP_LEFT);
-    facultyForm.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 4); -fx-pref-width: 400;");
+        // Left side: Faculty form
+        VBox facultyForm = new VBox(15);
+        facultyForm.setPadding(UILayoutConstants.PADDING);
+        facultyForm.setAlignment(Pos.TOP_LEFT);
+        facultyForm.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 4); -fx-pref-width: 400;");
 
-    Label formTitle = new Label("Faculty Details");
-    formTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #1e293b;");
+        Label formTitle = new Label("Faculty Details");
+        formTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #1e293b;");
 
-    // Add the Clear All Faculty button to the form
-    clearAllFacultyBtn.setMaxWidth(Double.MAX_VALUE);
-    // facultyForm.getChildren().addAll(formTitle, this.nameField, this.idField, this.emailField, this.mobileField, this.rfidField, clearAllFacultyBtn);
-
+        // Add the Clear All Faculty button to the form
+        clearAllFacultyBtn.setMaxWidth(Double.MAX_VALUE);
+        // facultyForm.getChildren().addAll(formTitle, this.nameField, this.idField, this.emailField, this.mobileField, this.rfidField, clearAllFacultyBtn);
 
         Button updateFacultyBtn = new Button("Update Faculty");
         updateFacultyBtn.setOnAction(e -> updateFaculty());
@@ -156,20 +156,54 @@ private Scene getManageScene() {
         facultyForm.getChildren().addAll(formTitle, this.nameField, this.idField, this.emailField, this.mobileField, this.rfidField, buttonContainer);
 
         // Right side: Faculty table
-        VBox rightSide = new VBox(15);
+        VBox rightSide = new VBox(15);  // Changed from BorderPane to VBox for better selection handling
         rightSide.setPadding(UILayoutConstants.PADDING);
-        rightSide.setAlignment(Pos.TOP_LEFT);
         rightSide.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 4); -fx-pref-width: 600;");
+        rightSide.setFocusTraversable(false);
 
         Label tableTitle = new Label("Faculty");
         tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #1e293b;");
 
         setupFacultyTable(facultyTable);
         setupFacultyTableContextMenu();
+        facultyTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         facultyTable.setItems(faculty);
-        facultyTable.setOnMouseClicked(e -> selectFaculty());
+        facultyTable.setOnMouseClicked(e -> {
+            // facultyTable.requestFocus();  // Removed to fix focus issue and enable proper multiple selection
+            if (e.getClickCount() == 1 && facultyTable.getSelectionModel().getSelectedItems().size() == 1) {
+                selectFaculty();
+            }
+        });
 
-        rightSide.getChildren().addAll(tableTitle, searchField, facultyTable);
+        facultyTable.setOnMousePressed(e -> {
+            if (e.getTarget() instanceof TableCell) {
+                TableCell cell = (TableCell) e.getTarget();
+                int row = cell.getIndex();
+                if (!e.isControlDown() && !e.isShiftDown()) {
+                    // Clear previous selection if not Ctrl or Shift
+                    facultyTable.getSelectionModel().clearSelection();
+                    facultyTable.getSelectionModel().select(row);
+                }
+                dragStartIndex = row;
+            }
+        });
+
+        facultyTable.setOnMouseDragged(e -> {
+            if (dragStartIndex != -1 && e.getTarget() instanceof TableCell) {
+                TableCell cell = (TableCell) e.getTarget();
+                int currentRow = cell.getIndex();
+                facultyTable.getSelectionModel().selectRange(Math.min(dragStartIndex, currentRow), Math.max(dragStartIndex, currentRow) + 1);
+            }
+        });
+
+        facultyTable.setOnMouseReleased(e -> {
+            dragStartIndex = -1;  // Reset
+        });
+
+        VBox topBox = new VBox(15);
+        topBox.getChildren().addAll(tableTitle, searchField);
+
+        rightSide.getChildren().addAll(topBox, facultyTable);
         centerLayout.getChildren().addAll(facultyForm, rightSide);
 
         return UIUtil.createScene(topBar, centerLayout);
@@ -345,36 +379,56 @@ private Scene getManageScene() {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem blockItem = new MenuItem("Block");
         blockItem.setOnAction(e -> blockFaculty());
-        MenuItem deleteItem = new MenuItem("Delete");
+        MenuItem deleteItem = new MenuItem("Delete Selected");
         deleteItem.setOnAction(e -> deleteFaculty());
         contextMenu.getItems().addAll(blockItem, deleteItem);
         facultyTable.setContextMenu(contextMenu);
     }
 
-
-
     private void deleteFaculty() {
-        Faculty selected = facultyTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            UIUtil.showAlert("Error", "Please select a faculty to delete", Alert.AlertType.ERROR);
+        ObservableList<Faculty> selectedFaculty = facultyTable.getSelectionModel().getSelectedItems();
+        if (selectedFaculty == null || selectedFaculty.isEmpty()) {
+            UIUtil.showAlert("Error", "Please select one or more faculty to delete", Alert.AlertType.ERROR);
             return;
         }
 
+        int count = selectedFaculty.size();
+        String message = count == 1
+            ? "Are you sure you want to delete the faculty '" + selectedFaculty.get(0).getName() + "'? This action cannot be undone."
+            : "Are you sure you want to delete " + count + " selected faculty members? This action cannot be undone.";
+
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Faculty");
-        alert.setHeaderText("Are you sure you want to delete this faculty?");
-        alert.setContentText("This action cannot be undone.");
+        alert.setHeaderText("Confirm Deletion");
+        alert.setContentText(message);
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                if (facultyDAO.deleteFaculty(selected.getId())) {
-                    loadFaculty();
-                    clearForm();
-                    UIUtil.showAlert("Success", "Faculty deleted successfully", Alert.AlertType.INFORMATION);
+                int successCount = 0;
+                int failCount = 0;
+                StringBuilder failedFaculty = new StringBuilder();
 
-                    // Send deletion notification email
-                    emailService.sendFacultyDeletionNotification(selected.getEmail(), selected.getName());
-                } else {
-                    UIUtil.showAlert("Error", "Failed to delete faculty", Alert.AlertType.ERROR);
+                for (Faculty faculty : selectedFaculty) {
+                    if (facultyDAO.deleteFaculty(faculty.getId())) {
+                        successCount++;
+                        // Send deletion notification email
+                        emailService.sendFacultyDeletionNotification(faculty.getEmail(), faculty.getName());
+                    } else {
+                        failCount++;
+                        if (failedFaculty.length() > 0) failedFaculty.append(", ");
+                        failedFaculty.append(faculty.getName());
+                    }
+                }
+
+                loadFaculty();
+                clearForm();
+
+                if (successCount > 0) {
+                    UIUtil.showAlert("Success", successCount + " faculty member(s) deleted successfully", Alert.AlertType.INFORMATION);
+                }
+
+                if (failCount > 0) {
+                    UIUtil.showAlert("Error", "Could not delete " + failCount + " faculty member(s): " + failedFaculty.toString() +
+                        ". These faculty may have issued books.", Alert.AlertType.ERROR);
                 }
             }
         });
@@ -390,8 +444,7 @@ private Scene getManageScene() {
         topBar.setPadding(new Insets(0, 0, 10, 0));
 
         Button backBtn = new Button("⬅ Back to Faculty");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: #f9fafb; -fx-border-color: #374151; -fx-text-fill: #374151; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
+               backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: #f9fafb; -fx-border-color: #374151; -fx-text-fill: #374151; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
         backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-border-color: #6b7280; -fx-text-fill: #6b7280; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 14 8 14; -fx-cursor: hand;"));
         backBtn.setOnAction(e -> UIUtil.switchScene(stage, getScene()));
 

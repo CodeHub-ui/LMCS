@@ -147,7 +147,7 @@ public boolean deleteCategory(int id) {
         List<Category> categories = new ArrayList<>();
         String sql = "SELECT * FROM categories WHERE name LIKE ?";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, "%" + query + "%");
+            stmt.setString(1, query + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Category category = new Category();

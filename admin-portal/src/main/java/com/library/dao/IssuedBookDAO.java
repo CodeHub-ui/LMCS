@@ -56,6 +56,27 @@ public class IssuedBookDAO {
     }
 
     /**
+     * Issues a book to a faculty member.
+     *
+     * @param facultyId the ID of the faculty
+     * @param bookId the ID of the book
+     * @return true if issued successfully, false otherwise
+     */
+    public boolean issueBookToFaculty(int facultyId, int bookId) {
+        String sql = "INSERT INTO issued_books (faculty_id, book_id) VALUES (?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, facultyId);
+            stmt.setInt(2, bookId);
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            System.err.println("Error issuing book to faculty: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Returns a book from a student.
      *
      * @param studentId the ID of the student
@@ -78,6 +99,7 @@ public class IssuedBookDAO {
 
     /**
      * Returns a book from a student using barcode.
+     * Inserts a record into returned_books before deleting from issued_books.
      *
      * @param studentId the ID of the student
      * @param barcode the barcode of the book
@@ -86,6 +108,8 @@ public class IssuedBookDAO {
     public boolean returnBook(int studentId, String barcode) {
         // First get the book_id for the barcode
         String getBookIdSql = "SELECT id FROM books WHERE barcode = ? LIMIT 1";
+        // Insert into returned_books
+        String insertSql = "INSERT INTO returned_books (student_id, book_id) VALUES (?, ?)";
         // Then delete one issued_books entry for this student and book
         String deleteSql = "DELETE FROM issued_books WHERE student_id = ? AND book_id = ? LIMIT 1";
 
@@ -96,6 +120,13 @@ public class IssuedBookDAO {
                 ResultSet rs = getBookStmt.executeQuery();
                 if (rs.next()) {
                     int bookId = rs.getInt("id");
+
+                    // Insert into returned_books
+                    try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, studentId);
+                        insertStmt.setInt(2, bookId);
+                        insertStmt.executeUpdate();
+                    }
 
                     // Delete one entry
                     try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
@@ -111,6 +142,56 @@ public class IssuedBookDAO {
             }
         } catch (SQLException e) {
             System.err.println("Error returning book: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Returns a book from a faculty member using barcode.
+     * Inserts a record into returned_books before deleting from issued_books.
+     *
+     * @param facultyId the ID of the faculty
+     * @param barcode the barcode of the book
+     * @return true if returned successfully, false otherwise
+     */
+    public boolean returnBookFromFaculty(int facultyId, String barcode) {
+        // First get the book_id for the barcode
+        String getBookIdSql = "SELECT id FROM books WHERE barcode = ? LIMIT 1";
+        // Insert into returned_books
+        String insertSql = "INSERT INTO returned_books (faculty_id, book_id) VALUES (?, ?)";
+        // Then delete one issued_books entry for this faculty and book
+        String deleteSql = "DELETE FROM issued_books WHERE faculty_id = ? AND book_id = ? LIMIT 1";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            // Get book_id
+            try (PreparedStatement getBookStmt = conn.prepareStatement(getBookIdSql)) {
+                getBookStmt.setString(1, barcode);
+                ResultSet rs = getBookStmt.executeQuery();
+                if (rs.next()) {
+                    int bookId = rs.getInt("id");
+
+                    // Insert into returned_books
+                    try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, facultyId);
+                        insertStmt.setInt(2, bookId);
+                        insertStmt.executeUpdate();
+                    }
+
+                    // Delete one entry
+                    try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                        deleteStmt.setInt(1, facultyId);
+                        deleteStmt.setInt(2, bookId);
+                        int rows = deleteStmt.executeUpdate();
+                        return rows > 0;
+                    }
+                } else {
+                    System.err.println("Book with barcode " + barcode + " not found.");
+                    return false;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error returning book from faculty: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -169,14 +250,15 @@ public class IssuedBookDAO {
      * Includes both students and faculty issued books.
      *
      * @param query the search query
-     * @return a list of issued book details as string arrays [book_name, barcode, user_name_with_type, user_id]
+     * @return a list of issued book details as string arrays [book_name, barcode, user_name_with_type, user_id, issue_date]
      *         where user_name_with_type is "Name (student)" or "Name (faculty)"
      */
     public List<String[]> searchIssuedBooks(String query) {
         List<String[]> issuedBooks = new ArrayList<>();
         String sql = "SELECT b.name AS book_name, b.barcode, " +
                      "CASE WHEN ib.student_id IS NOT NULL THEN CONCAT(s.name, ' (student)') ELSE CONCAT(f.name, ' (faculty)') END AS user_name_with_type, " +
-                     "CASE WHEN ib.student_id IS NOT NULL THEN s.student_id ELSE f.faculty_id END AS user_id " +
+                     "CASE WHEN ib.student_id IS NOT NULL THEN s.student_id ELSE f.faculty_id END AS user_id, " +
+                     "ib.issue_date " +
                      "FROM issued_books ib " +
                      "JOIN books b ON ib.book_id = b.id " +
                      "LEFT JOIN students s ON ib.student_id = s.id " +
@@ -185,7 +267,7 @@ public class IssuedBookDAO {
                      "(ib.student_id IS NOT NULL AND (s.name LIKE ? OR s.student_id LIKE ?)) OR " +
                      "(ib.faculty_id IS NOT NULL AND (f.name LIKE ? OR f.faculty_id LIKE ?))";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            String likeQuery = "%" + query + "%";
+            String likeQuery = query + "%";
             stmt.setString(1, likeQuery);
             stmt.setString(2, likeQuery);
             stmt.setString(3, likeQuery);
@@ -198,7 +280,8 @@ public class IssuedBookDAO {
                         rs.getString("book_name"),
                         rs.getString("barcode"),
                         rs.getString("user_name_with_type"),
-                        rs.getString("user_id")
+                        rs.getString("user_id"),
+                        rs.getString("issue_date")
                     });
                 }
             }
@@ -315,5 +398,56 @@ public class IssuedBookDAO {
             e.printStackTrace();
             return 0;
         }
+    }
+
+    /**
+     * Searches for returned books by book name, barcode, user name, or user ID.
+     * Includes both students and faculty returned books.
+     *
+     * @param query the search query
+     * @return a list of returned book details as string arrays [book_name, barcode, user_name_with_type, user_id, issue_date, return_date]
+     *         where user_name_with_type is "Name (student)" or "Name (faculty)"
+     */
+    public List<String[]> searchReturnedBooks(String query) {
+        List<String[]> returnedBooks = new ArrayList<>();
+        String sql = "SELECT b.name AS book_name, b.barcode, " +
+                     "CASE WHEN rb.student_id IS NOT NULL THEN CONCAT(s.name, ' (student)') ELSE CONCAT(f.name, ' (faculty)') END AS user_name_with_type, " +
+                     "CASE WHEN rb.student_id IS NOT NULL THEN s.student_id ELSE f.faculty_id END AS user_id, " +
+                     "ib.issue_date, " +
+                     "rb.return_date " +
+                     "FROM returned_books rb " +
+                     "JOIN books b ON rb.book_id = b.id " +
+                     "LEFT JOIN issued_books ib ON ((rb.student_id IS NOT NULL AND ib.student_id = rb.student_id) OR (rb.faculty_id IS NOT NULL AND ib.faculty_id = rb.faculty_id)) AND ib.book_id = rb.book_id " +
+                     "LEFT JOIN students s ON rb.student_id = s.id " +
+                     "LEFT JOIN faculty f ON rb.faculty_id = f.id " +
+                     "WHERE b.name LIKE ? OR b.barcode LIKE ? OR " +
+                     "(rb.student_id IS NOT NULL AND (s.name LIKE ? OR s.student_id LIKE ?)) OR " +
+                     "(rb.faculty_id IS NOT NULL AND (f.name LIKE ? OR f.faculty_id LIKE ?)) " +
+                     "ORDER BY rb.return_date DESC";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String likeQuery = "%" + query + "%";
+            stmt.setString(1, likeQuery);
+            stmt.setString(2, likeQuery);
+            stmt.setString(3, likeQuery);
+            stmt.setString(4, likeQuery);
+            stmt.setString(5, likeQuery);
+            stmt.setString(6, likeQuery);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    returnedBooks.add(new String[]{
+                        rs.getString("book_name"),
+                        rs.getString("barcode"),
+                        rs.getString("user_name_with_type"),
+                        rs.getString("user_id"),
+                        rs.getString("issue_date"),
+                        rs.getString("return_date")
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching returned books: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return returnedBooks;
     }
 }

@@ -22,10 +22,16 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javafx.scene.control.Alert;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.application.Platform;
 
 // For email functionality
 import jakarta.mail.*;
@@ -42,7 +48,9 @@ public class UserReturnController {
     private Stage stage;
     private List<String[]> issuedBooks;
     private List<String[]> returnedBooks = new ArrayList<>();
-    private TableView<Book> issuedBooksTable;
+    private ObservableList<Book> searchResults = FXCollections.observableArrayList();
+    private ObservableList<Book> selectedBooks = FXCollections.observableArrayList();
+    private ScheduledExecutorService debounceExecutor = Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Constructor for UserReturnController.
@@ -64,93 +72,163 @@ public class UserReturnController {
 
     /**
      * Creates and returns the return scene.
-     * Displays issued books and provides options to return books or navigate.
+     * Includes search functionality, book selection, and navigation buttons.
      *
      * @return the Scene object for the return view
      */
     public Scene getScene() {
-        VBox contentBox = new VBox(15);
-        contentBox.setPadding(new Insets(30));
-        contentBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 20;");
-        contentBox.setMaxWidth(520);
+        StackPane mainLayout = new StackPane();
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
+
+        VBox contentBox = new VBox(20);
+        contentBox.setPadding(UILayoutConstants.PADDING);
+        contentBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 15;");
+        contentBox.setMaxWidth(700);
         contentBox.setAlignment(Pos.CENTER);
 
+        DropShadow shadow = new DropShadow();
+        shadow.setBlurType(BlurType.GAUSSIAN);
+        shadow.setColor(Color.rgb(0, 0, 0, 0.12));
+        shadow.setRadius(16);
+        contentBox.setEffect(shadow);
+
         Label heading = new Label("📘 Return Portal");
-        heading.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        heading.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
 
-        Label issuedLabel = new Label("Your issued books:");
-        issuedLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: 600; -fx-text-fill: #334155;");
-        issuedBooksTable = new TableView<>();
-        issuedBooksTable.setPrefHeight(160);
-        issuedBooksTable.setPrefWidth(480);
-        issuedBooksTable.setStyle("-fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10; -fx-border-color: #d1d5db; -fx-font-size: 15; -fx-text-fill: #1e293b;");
-        issuedBooksTable.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.06), 6, 0, 0, 1));
-        refreshIssuedBooksTable();
+        TextField searchField = new TextField();
+        searchField.setPromptText("Search by book name or barcode...");
+        searchField.setPrefWidth(660);
+        searchField.setPadding(new Insets(12));
+        searchField.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        searchField.setFocusTraversable(false);
+        searchField.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.05), 6, 0, 0, 2));
 
-        TextField barcodeField = new TextField();
-        barcodeField.setPromptText("Scan Barcode to Return");
-        barcodeField.setPrefWidth(480);
-        barcodeField.setPadding(new Insets(10));
-        barcodeField.setStyle("-fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10; -fx-border-color: #cbd5e1; -fx-font-size: 15; -fx-text-fill: #334155;");
-        barcodeField.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.04), 4, 0, 0, 2));
+        // Initialize with all issued books
+        List<Book> issuedBookObjects = issuedBooks.stream()
+                .map(bookData -> {
+                    Book book = new Book();
+                    book.setName(bookData[0]);
+                    book.setBarcode(bookData[1]);
+                    book.setAuthor(bookData[2]);
+                    return book;
+                })
+                .collect(Collectors.toList());
+        searchResults.setAll(issuedBookObjects);
 
-        Button returnBtn = createStyledButton("Return Selected Book", "#1f7aec", "#0f62fe");
-        returnBtn.setPrefWidth(480);
-        returnBtn.setPrefHeight(40);
-        returnBtn.setOnAction(e -> {
-            String barcode = barcodeField.getText();
-            if (barcode.trim().isEmpty()) {
-                UIUtil.showAlert("Error", "Please enter a barcode to return.", Alert.AlertType.ERROR);
+        TableView<Book> bookTable = new TableView<>();
+        bookTable.setItems(searchResults);
+        bookTable.setPrefHeight(200);
+
+        TableColumn<Book, String> titleCol = new TableColumn<>("Title");
+        titleCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
+        titleCol.setPrefWidth(200);
+
+        TableColumn<Book, String> authorCol = new TableColumn<>("Author");
+        authorCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAuthor()));
+        authorCol.setPrefWidth(150);
+
+        TableColumn<Book, String> barcodeCol = new TableColumn<>("Barcode");
+        barcodeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getBarcode()));
+        barcodeCol.setPrefWidth(120);
+
+        bookTable.getColumns().addAll(titleCol, authorCol, barcodeCol);
+
+        TableView<Book> selectedBookTable = new TableView<>();
+        selectedBookTable.setItems(selectedBooks);
+        selectedBookTable.setPrefHeight(150);
+
+        TableColumn<Book, String> selTitleCol = new TableColumn<>("Title");
+        selTitleCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
+        selTitleCol.setPrefWidth(200);
+
+        TableColumn<Book, String> selBarcodeCol = new TableColumn<>("Barcode");
+        selBarcodeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getBarcode()));
+        selBarcodeCol.setPrefWidth(120);
+
+        selectedBookTable.getColumns().addAll(selTitleCol, selBarcodeCol);
+
+        Button addBookBtn = UIUtil.createStyledButton("Add Book", "#3b82f6", "#2563eb");
+        addBookBtn.setPrefWidth(200);
+        addBookBtn.setPrefHeight(50);
+        addBookBtn.setOnAction(e -> {
+            Book selected = bookTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                UIUtil.showAlert("Error", "Please select a book from the search results to add.", Alert.AlertType.ERROR);
+                return;
+            }
+            if (selectedBooks.stream().anyMatch(b -> b.getBarcode().equals(selected.getBarcode()))) {
+                UIUtil.showAlert("Error", "This book is already added for returning.", Alert.AlertType.ERROR);
+                return;
+            }
+            selectedBooks.add(selected);
+        });
+
+        Button removeBookBtn = UIUtil.createStyledButton("Remove Selected Book", "#ef4444", "#dc2626");
+        removeBookBtn.setPrefWidth(200);
+        removeBookBtn.setPrefHeight(50);
+        removeBookBtn.setOnAction(e -> {
+            Book selected = selectedBookTable.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                UIUtil.showAlert("Error", "Please select a book to remove.", Alert.AlertType.ERROR);
+                return;
+            }
+            selectedBooks.remove(selected);
+        });
+
+        Button continueBtn = UIUtil.createStyledButton("Continue", "#22c55e", "#16a34a");
+        continueBtn.setPrefWidth(200);
+        continueBtn.setPrefHeight(50);
+        continueBtn.setOnAction(e -> {
+            if (selectedBooks.isEmpty()) {
+                UIUtil.showAlert("Error", "No books selected to return.", Alert.AlertType.ERROR);
                 return;
             }
             User user = UserSession.getLoggedInUser(stage);
-            IssuedBookDAO dao = new IssuedBookDAO();
-            boolean success;
-            if (user.getCourse().isEmpty()) {
-                // Faculty
-                success = dao.returnBookForFaculty(user.getId(), barcode);
-            } else {
-                // Student
-                success = dao.returnBook(user.getId(), barcode);
-            }
-            if (success) {
-                // Find the returned book details
-                for (String[] book : issuedBooks) {
-                    if (book[1].equals(barcode)) {
-                        returnedBooks.add(book);
-                        break;
+            try {
+                // Return the books and build returnedBooksList for confirmation scene
+                returnedBooks = new ArrayList<>();
+                IssuedBookDAO issuedBookDAO = new IssuedBookDAO();
+                for (Book book : selectedBooks) {
+                    boolean success = false;
+                    if (user.getCourse().isEmpty()) {
+                        // Faculty
+                        success = issuedBookDAO.returnBookForFaculty(user.getId(), book.getBarcode());
+                    } else {
+                        // Student
+                        success = issuedBookDAO.returnBook(user.getId(), book.getBarcode());
                     }
+                    if (!success) {
+                        UIUtil.showAlert("Error", "Failed to return book: " + book.getName() + " (" + book.getBarcode() + ").", Alert.AlertType.ERROR);
+                        return;
+                    }
+                    // Add to returnedBooks for email
+                    returnedBooks.add(new String[]{book.getName(), book.getBarcode(), book.getAuthor()});
                 }
-                UIUtil.showAlert("Success", "Book returned.", Alert.AlertType.INFORMATION);
-                if (user.getCourse().isEmpty()) {
-                    // Faculty
-                    issuedBooks = dao.getIssuedBooksForFaculty(user.getId());
-                } else {
-                    // Student
-                    issuedBooks = dao.getIssuedBooks(user.getId());
-                }
-                refreshIssuedBooksTable();
-                barcodeField.clear();
 
                 // Send email notification for book return
                 sendBookReturnEmail(stage);
 
-            } else {
-                UIUtil.showAlert("Error", "Return failed.", Alert.AlertType.ERROR);
+                // Clear inputs after storing returned list
+                selectedBooks.clear();
+                searchResults.clear();
+                searchField.clear();
+
+                // Logout after returning to prevent session confusion for next user
+                UserSession.logout(stage);
+
+                UIUtil.switchScene(stage, new UserLoginController(stage).getScene());
+            } catch (Exception ex) {
+                UIUtil.showAlert("Error", "An unexpected error occurred while returning books.", Alert.AlertType.ERROR);
+                ex.printStackTrace();
             }
         });
 
-        Button continueBtn = createStyledButton("Continue", "#f59e0b", "#f97316");
-        continueBtn.setPrefWidth(200);
-        continueBtn.setPrefHeight(50);
-        continueBtn.setOnAction(e -> UIUtil.switchScene(stage, getConfirmationScene()));
-
-        Button backBtn = createStyledButton("Back", "#6b7280", "#374151");
+        Button backBtn = UIUtil.createStyledButton("Back", "#6b7280", "#4b5563");
         backBtn.setPrefWidth(200);
         backBtn.setPrefHeight(50);
         backBtn.setOnAction(e -> UIUtil.switchScene(stage, new UserDashboardController(stage).getScene()));
 
-        Button logoutBtn = createStyledButton("Logout", "#ef4444", "#dc2626");
+        Button logoutBtn = UIUtil.createStyledButton("Logout", "#ef4444", "#dc2626");
         logoutBtn.setPrefWidth(200);
         logoutBtn.setPrefHeight(50);
         logoutBtn.setOnAction(e -> {
@@ -158,47 +236,76 @@ public class UserReturnController {
             UIUtil.switchScene(stage, new UserLoginController(stage).getScene());
         });
 
-        HBox buttonsRow = new HBox(15);
-        buttonsRow.setAlignment(Pos.CENTER);
-        buttonsRow.getChildren().addAll(continueBtn, backBtn);
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            String trimmed = newValue.trim();
+            // Cancel previous debounce task
+            debounceExecutor.shutdownNow();
+            debounceExecutor = Executors.newSingleThreadScheduledExecutor();
 
-        contentBox.getChildren().addAll(heading, issuedLabel, issuedBooksTable, barcodeField, returnBtn, buttonsRow, logoutBtn);
+            if (!trimmed.isEmpty()) {
+                // Check for exact barcode match for auto-add
+                for (String[] issuedBook : issuedBooks) {
+                    if (issuedBook[1].equals(trimmed)) {
+                        Book book = new Book();
+                        book.setName(issuedBook[0]);
+                        book.setBarcode(issuedBook[1]);
+                        book.setAuthor(issuedBook[2]);
+                        if (selectedBooks.stream().noneMatch(b -> b.getBarcode().equals(trimmed))) {
+                            selectedBooks.add(book);
+                        }
+                        // Use Platform.runLater to avoid triggering another change event during current event processing
+                        Platform.runLater(() -> searchField.clear());
+                        return;
+                    }
+                }
 
-        StackPane mainLayout = new StackPane(contentBox);
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+                // Debounce search
+                debounceExecutor.schedule(() -> {
+                    List<Book> results = issuedBooks.stream()
+                            .filter(bookData -> bookData[0].toLowerCase().contains(trimmed.toLowerCase()) ||
+                                               bookData[1].contains(trimmed))
+                            .map(bookData -> {
+                                Book book = new Book();
+                                book.setName(bookData[0]);
+                                book.setBarcode(bookData[1]);
+                                book.setAuthor(bookData[2]);
+                                return book;
+                            })
+                            .limit(10)
+                            .collect(Collectors.toList());
+                    searchResults.setAll(results);
+                }, 300, TimeUnit.MILLISECONDS);
+            } else {
+                // Show all issued books when search is empty
+                List<Book> allBooks = issuedBooks.stream()
+                        .map(bookData -> {
+                            Book book = new Book();
+                            book.setName(bookData[0]);
+                            book.setBarcode(bookData[1]);
+                            book.setAuthor(bookData[2]);
+                            return book;
+                        })
+                        .collect(Collectors.toList());
+                searchResults.setAll(allBooks);
+            }
+        });
+
+        HBox buttonsBox = new HBox(10, addBookBtn, removeBookBtn);
+        buttonsBox.setPadding(UILayoutConstants.PADDING);
+        buttonsBox.setAlignment(Pos.CENTER);
+
+        HBox navButtonsBox = new HBox(10, continueBtn, backBtn, logoutBtn);
+        navButtonsBox.setPadding(UILayoutConstants.PADDING);
+        navButtonsBox.setAlignment(Pos.CENTER);
+
+        contentBox.getChildren().addAll(heading, searchField, bookTable, buttonsBox, new Label("Selected Books to Return:"), selectedBookTable, navButtonsBox);
+        mainLayout.getChildren().add(contentBox);
         StackPane.setAlignment(contentBox, Pos.CENTER);
 
         return new Scene(mainLayout, UILayoutConstants.SCENE_WIDTH, UILayoutConstants.SCENE_HEIGHT);
     }
 
-    private void refreshIssuedBooksTable() {
-        List<Book> bookObjects = new ArrayList<>();
-        for (String[] bookData : issuedBooks) {
-            Book book = new Book();
-            book.setName(bookData[0]);
-            book.setBarcode(bookData[1]);
-            book.setAuthor(bookData[2]);
-            bookObjects.add(book);
-        }
-        issuedBooksTable.setItems(FXCollections.observableArrayList(bookObjects));
 
-        // Setup columns if not already set
-        if (issuedBooksTable.getColumns().isEmpty()) {
-            TableColumn<Book, String> nameCol = new TableColumn<>("Name");
-            nameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
-            nameCol.setPrefWidth(150);
-
-            TableColumn<Book, String> barcodeCol = new TableColumn<>("Barcode");
-            barcodeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getBarcode()));
-            barcodeCol.setPrefWidth(100);
-
-            TableColumn<Book, String> authorCol = new TableColumn<>("Author");
-            authorCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAuthor()));
-            authorCol.setPrefWidth(150);
-
-            issuedBooksTable.getColumns().addAll(nameCol, barcodeCol, authorCol);
-        }
-    }
 
     /**
      * Creates the confirmation scene after returning books.
@@ -264,7 +371,7 @@ public class UserReturnController {
         contentBox.getChildren().addAll(message, returnedTable, navBox);
 
         StackPane mainLayout = new StackPane();
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
         mainLayout.getChildren().add(contentBox);
         StackPane.setAlignment(contentBox, Pos.CENTER);
 

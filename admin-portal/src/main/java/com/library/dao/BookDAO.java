@@ -211,10 +211,12 @@ public boolean updateBook(Book book) {
      */
     public List<Book> searchBooks(String query) throws SQLException {
         List<Book> books = new ArrayList<>();
-        String sql = "SELECT id, name, author, barcode, category_id, quantity FROM books WHERE name LIKE ? OR barcode LIKE ? LIMIT 10";
+        String sql = "SELECT id, name, author, barcode, category_id, quantity FROM books WHERE LOWER(name) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?) OR LOWER(barcode) LIKE LOWER(?) LIMIT 10";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, "%" + query + "%");
-            stmt.setString(2, "%" + query + "%");
+            String searchPattern = query + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Book book = new Book();

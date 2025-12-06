@@ -1,37 +1,34 @@
-// Enhanced LoginController with MaterialFX and AnimateFX
 package com.library.controller;
 
 import com.library.dao.AdminDAO;
-import com.library.dao.StudentDAO;
-import com.library.dao.FacultyDAO;
 import com.library.model.Admin;
-import com.library.model.Student;
-import com.library.model.Faculty;
 import com.library.model.Session;
 import com.library.util.UIUtil;
 import com.library.util.UILayoutConstants;
-import com.library.util.PasswordUtil;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import io.github.palexdev.materialfx.controls.MFXTextField;
-import io.github.palexdev.materialfx.controls.MFXToggleButton;
 import animatefx.animation.FadeIn;
 import animatefx.animation.FadeInUp;
-import animatefx.animation.SlideInLeft;
-import animatefx.animation.SlideInRight;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+/**
+ * Controller for handling admin login functionality with advanced UI.
+ */
 public class LoginController {
     private Stage stage;
 
@@ -40,198 +37,135 @@ public class LoginController {
     }
 
     public Scene getScene() {
-        // Main container with a modern, clean look
+        // Main container with background image
+        StackPane mainLayout = new StackPane();
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
+
+        // Content card
         VBox contentBox = new VBox(20);
         contentBox.setPadding(new Insets(40));
-        contentBox.setAlignment(Pos.CENTER);
-        contentBox.setStyle(UILayoutConstants.getContentPaneStyle());
+        contentBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 15;");
         contentBox.setMaxWidth(450);
+        contentBox.setMaxHeight(550);
+        contentBox.setAlignment(Pos.CENTER);
 
-        Label heading = new Label("Admin Portal Login");
-        heading.setStyle(UILayoutConstants.getHeadingStyle());
+        DropShadow shadow = new DropShadow();
+        shadow.setBlurType(javafx.scene.effect.BlurType.GAUSSIAN);
+        shadow.setColor(Color.rgb(0, 0, 0, 0.12));
+        shadow.setRadius(16);
+        contentBox.setEffect(shadow);
 
-        Label subHeading = new Label("Enter your credentials or scan your RFID card.");
-        subHeading.setStyle(UILayoutConstants.getSubheadingStyle());
+        // Gradient heading
+        Rectangle headingBg = new Rectangle(400, 60);
+        headingBg.setArcWidth(15);
+        headingBg.setArcHeight(15);
+        LinearGradient gradient = new LinearGradient(
+            0, 0, 1, 0, true,
+            javafx.scene.paint.CycleMethod.NO_CYCLE,
+            new Stop(0, Color.web("#667eea")),
+            new Stop(1, Color.web("#764ba2"))
+        );
+        headingBg.setFill(gradient);
 
-        TextField adminIdField = new TextField();
-        adminIdField.setPromptText("Admin ID or RFID");
-        adminIdField.setStyle(UILayoutConstants.getTextInputStyle());
+        Label heading = new Label("ADMIN LOGIN");
+        heading.setFont(Font.font("System", FontWeight.BOLD, 24));
+        heading.setTextFill(Color.WHITE);
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Password (if applicable)");
-        passwordField.setStyle(UILayoutConstants.TEXT_INPUT_STYLE);
+        StackPane headingPane = new StackPane(headingBg, heading);
 
-        TextField plainPassword = new TextField();
-        plainPassword.setPromptText("Password (if applicable)");
-        plainPassword.setStyle(UILayoutConstants.TEXT_INPUT_STYLE);
+        Label subHeading = new Label("Enter your credentials to access the admin portal");
+        subHeading.setStyle("-fx-font-size: 14px; -fx-text-fill: #475569;");
 
-        // Show password checkbox: when selected show plain text field, otherwise show masked PasswordField
-        CheckBox showPassword = new CheckBox("Show Password");
-        showPassword.setStyle("-fx-text-fill: #475569;");
-        // Bind text bidirectionally so both fields reflect the same content
-        plainPassword.textProperty().bindBidirectional(passwordField.textProperty());
-        // Toggle visibility/managed properties
-        plainPassword.managedProperty().bind(showPassword.selectedProperty());
-        plainPassword.visibleProperty().bind(showPassword.selectedProperty());
-        passwordField.managedProperty().bind(showPassword.selectedProperty().not());
-        passwordField.visibleProperty().bind(showPassword.selectedProperty().not());
+        // MaterialFX text fields with icons
+        MFXTextField adminIdField = new MFXTextField();
+        adminIdField.setPromptText("Admin ID");
+        adminIdField.setPrefWidth(350);
+        adminIdField.setStyle("-fx-font-size: 14px; -fx-padding: 12; -fx-background-radius: 8; -fx-border-radius: 8;");
+        adminIdField.setLeadingIcon(new javafx.scene.control.Label("👤"));
+        adminIdField.getLeadingIcon().setStyle("-fx-font-size: 16px;");
 
-        Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
-        forgotPassword.setOnAction(e -> handleForgotPassword());
+        MFXPasswordField passwordField = new MFXPasswordField();
+        passwordField.setPromptText("Password");
+        passwordField.setPrefWidth(350);
+        passwordField.setStyle("-fx-font-size: 14px; -fx-padding: 12; -fx-background-radius: 8; -fx-border-radius: 8;");
+        passwordField.setLeadingIcon(new javafx.scene.control.Label("🔒"));
+        passwordField.getLeadingIcon().setStyle("-fx-font-size: 16px;");
 
-        Button registerBtn = new Button("Register New Admin");
-        UIUtil.setButtonStyle(registerBtn, "#6b7280", "#4b5563");
-        registerBtn.setMaxWidth(Double.MAX_VALUE);
-        registerBtn.setOnAction(e -> UIUtil.switchScene(stage, new RegistrationController(stage).getScene()));
+        // Buttons
+        MFXButton loginBtn = new MFXButton("Login");
+        loginBtn.setPrefWidth(350);
+        loginBtn.setPrefHeight(45);
+        loginBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 8;");
+        loginBtn.setOnMouseEntered(e -> loginBtn.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 8;"));
+        loginBtn.setOnMouseExited(e -> loginBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: 600; -fx-background-radius: 8;"));
 
-        Button loginBtn = new Button("Login");
-        UIUtil.setButtonStyle(loginBtn, "#3b82f6", "#2563eb");
-        loginBtn.setMaxWidth(Double.MAX_VALUE);
+        MFXButton forgotPasswordBtn = new MFXButton("Forgot Password?");
+        forgotPasswordBtn.setPrefWidth(350);
+        forgotPasswordBtn.setPrefHeight(45);
+        forgotPasswordBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #3b82f6; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #3b82f6; -fx-border-radius: 8;");
+        forgotPasswordBtn.setOnMouseEntered(e -> forgotPasswordBtn.setStyle("-fx-background-color: #eff6ff; -fx-text-fill: #3b82f6; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #3b82f6; -fx-border-radius: 8;"));
+        forgotPasswordBtn.setOnMouseExited(e -> forgotPasswordBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #3b82f6; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #3b82f6; -fx-border-radius: 8;"));
 
-        loginBtn.setOnAction(e -> {
-            String input = adminIdField.getText() == null ? "" : adminIdField.getText().trim();
-            String pwd = passwordField.getText(); // plainPassword is bound, so either works
+        MFXButton registerBtn = new MFXButton("Register New Admin");
+        registerBtn.setPrefWidth(350);
+        registerBtn.setPrefHeight(45);
+        registerBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-border-radius: 8;");
+        registerBtn.setOnMouseEntered(e -> registerBtn.setStyle("-fx-background-color: #e2e8f0; -fx-text-fill: #475569; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-border-radius: 8;"));
+        registerBtn.setOnMouseExited(e -> registerBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-font-weight: 600; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-border-radius: 8;"));
 
-            // If password field is empty, assume RFID scan
-            if (pwd.isEmpty()) {
-                Student student = new StudentDAO().getStudentByRFID(input);
-                if (student != null && student.isActive()) {
-                    Session.setLoggedInUser(student);
-                    UIUtil.switchScene(stage, new DashboardController(stage).getScene());
-                    return;
-                }
+        // Login action
+        Runnable performLogin = () -> {
+            String adminId = adminIdField.getText().trim();
+            String password = passwordField.getText();
 
-                Faculty faculty = new FacultyDAO().getFacultyByRFID(input);
-                if (faculty != null && faculty.isActive()) {
-                    Session.setLoggedInUser(faculty);
-                    UIUtil.switchScene(stage, new DashboardController(stage).getScene());
-                    return;
-                }
-                // If RFID also fails, show a generic error
-                UIUtil.showAlert("Error", "Invalid credentials or inactive RFID.", Alert.AlertType.ERROR);
+            if (adminId.isEmpty() || password.isEmpty()) {
+                UIUtil.showAlert("Error", "Please enter both Admin ID and Password.", javafx.scene.control.Alert.AlertType.ERROR);
+                return;
+            }
+
+            AdminDAO dao = new AdminDAO();
+            Admin admin = dao.login(adminId, password);
+            if (admin != null) {
+                Session.setLoggedInUser(admin);
+                UIUtil.switchScene(stage, new DashboardController(stage).getScene());
             } else {
-                // Otherwise, attempt Admin login with ID and password
-                Admin admin = new AdminDAO().login(input, pwd);
-                if (admin != null) {
-                    Session.setLoggedInUser(admin);
-                    UIUtil.switchScene(stage, new DashboardController(stage).getScene());
-                } else {
-                    String err = AdminDAO.getLastErrorMessage();
-                    String msg = (err != null) ? err : "Invalid credentials";
-                    UIUtil.showAlert("Error", msg, Alert.AlertType.ERROR);
-                }
+                UIUtil.showAlert("Error", "Invalid Admin ID or Password.", javafx.scene.control.Alert.AlertType.ERROR);
+            }
+        };
+
+        loginBtn.setOnAction(e -> performLogin.run());
+
+        // Enter key support
+        adminIdField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                performLogin.run();
+            }
+        });
+        passwordField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                performLogin.run();
             }
         });
 
-        VBox buttonContainer = new VBox(10, loginBtn, registerBtn);
-
-        contentBox.getChildren().addAll(heading, subHeading, adminIdField, passwordField, plainPassword, showPassword, forgotPassword, buttonContainer);
-
-        return UIUtil.createScene(null, contentBox);
-    }
-
-    private void handleForgotPassword() {
-        TextInputDialog emailDialog = new TextInputDialog();
-        emailDialog.setTitle("Forgot Password");
-        emailDialog.setHeaderText("Enter your email address");
-        emailDialog.setContentText("Email:");
-        emailDialog.showAndWait().ifPresent(email -> {
-            if (!email.trim().isEmpty()) {
-                AdminDAO dao = new AdminDAO();
-                if (dao.sendPasswordResetEmail(email.trim())) {
-                    UIUtil.showAlert("Success", "Password reset code sent to your email.", Alert.AlertType.INFORMATION);
-                    // Show reset code dialog
-                    showPasswordResetDialog(email.trim());
-                } else {
-                    UIUtil.showAlert("Error", "Email not found or failed to send.", Alert.AlertType.ERROR);
-                }
-            }
-        });
-    }
-
-    private void showPasswordResetDialog(String email) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Reset Password");
-        dialog.setHeaderText("Enter the reset code and new password");
-
-        // Create the content
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField codeField = new TextField();
-        codeField.setPromptText("Reset Code");
-        PasswordField newPasswordField = new PasswordField();
-        newPasswordField.setPromptText("New Password");
-        PasswordField confirmPasswordField = new PasswordField();
-        confirmPasswordField.setPromptText("Confirm New Password");
-
-        grid.add(new Label("Reset Code:"), 0, 0);
-        grid.add(codeField, 1, 0);
-        grid.add(new Label("New Password:"), 0, 1);
-        grid.add(newPasswordField, 1, 1);
-        grid.add(new Label("Confirm Password:"), 0, 2);
-        grid.add(confirmPasswordField, 1, 2);
-
-        dialog.getDialogPane().setContent(grid);
-
-        // Add buttons
-        ButtonType resetButtonType = new ButtonType("Reset Password", ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(resetButtonType, ButtonType.CANCEL);
-
-        // Enable/Disable reset button depending on whether fields are filled
-        Button resetButton = (Button) dialog.getDialogPane().lookupButton(resetButtonType);
-        resetButton.setDisable(true);
-
-        // Validation
-        codeField.textProperty().addListener((observable, oldValue, newValue) -> {
-            resetButton.setDisable(newValue.trim().isEmpty() || newPasswordField.getText().trim().isEmpty() ||
-                                 confirmPasswordField.getText().trim().isEmpty());
-        });
-        newPasswordField.textProperty().addListener((observable, oldValue, newValue) -> {
-            resetButton.setDisable(codeField.getText().trim().isEmpty() || newValue.trim().isEmpty() ||
-                                 confirmPasswordField.getText().trim().isEmpty());
-        });
-        confirmPasswordField.textProperty().addListener((observable, oldValue, newValue) -> {
-            resetButton.setDisable(codeField.getText().trim().isEmpty() || newPasswordField.getText().trim().isEmpty() ||
-                                 newValue.trim().isEmpty());
+        forgotPasswordBtn.setOnAction(e -> {
+            ForgotPasswordController forgotController = new ForgotPasswordController(stage, this);
+            UIUtil.switchScene(stage, forgotController.getScene());
         });
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == resetButtonType) {
-                String code = codeField.getText().trim();
-                String newPassword = newPasswordField.getText();
-                String confirmPassword = confirmPasswordField.getText();
-
-                if (!PasswordUtil.isValidPassword(newPassword)) {
-                    UIUtil.showAlert("Error", "Password must be at least 8 characters with upper, lower, and digit.", Alert.AlertType.ERROR);
-                    return null;
-                }
-
-                if (!newPassword.equals(confirmPassword)) {
-                    UIUtil.showAlert("Error", "Passwords do not match.", Alert.AlertType.ERROR);
-                    return null;
-                }
-
-                AdminDAO dao = new AdminDAO();
-                Admin admin = dao.getAdminByEmail(email);
-                if (admin != null) {
-                    // For simplicity, we'll just update the password directly
-                    // In a real application, you'd verify the reset code matches what was sent
-                    if (dao.updatePassword(admin.getId(), newPassword)) {
-                        UIUtil.showAlert("Success", "Password reset successfully!", Alert.AlertType.INFORMATION);
-                        return dialogButton;
-                    } else {
-                        UIUtil.showAlert("Error", "Failed to reset password.", Alert.AlertType.ERROR);
-                    }
-                } else {
-                    UIUtil.showAlert("Error", "Admin not found.", Alert.AlertType.ERROR);
-                }
-            }
-            return null;
+        registerBtn.setOnAction(e -> {
+            RegistrationController registrationController = new RegistrationController(stage);
+            UIUtil.switchScene(stage, registrationController.getScene());
         });
 
-        dialog.showAndWait();
+        contentBox.getChildren().addAll(headingPane, subHeading, adminIdField, passwordField, loginBtn, forgotPasswordBtn, registerBtn);
+        mainLayout.getChildren().add(contentBox);
+        StackPane.setAlignment(contentBox, Pos.CENTER);
+
+        // Apply animations
+        FadeIn fadeIn = new FadeIn(contentBox);
+        fadeIn.setSpeed(0.5);
+        fadeIn.play();
+
+        return new Scene(mainLayout, 1050, 650);
     }
 }

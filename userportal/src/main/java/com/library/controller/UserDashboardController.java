@@ -51,7 +51,7 @@ public class UserDashboardController {
         }
 
         StackPane mainLayout = new StackPane();
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
 
         VBox contentBox = new VBox(20);
         contentBox.setPadding(new Insets(25));
@@ -67,10 +67,27 @@ public class UserDashboardController {
 
         // Heading label with gradient background and padding
         Label heading = new Label("User Portal");
-        heading.setStyle("-fx-font-weight: bold; -fx-font-size: 22px; -fx-background-radius: 10; -fx-text-fill: white; -fx-padding: 12 20 12 20;");
-        heading.setBackground(new Background(new BackgroundFill(
-                javafx.scene.paint.LinearGradient.valueOf("linear-gradient(to right, #4caf50, #2196f3)"),
-                new CornerRadii(10), Insets.EMPTY)));
+
+heading.setStyle(
+    "-fx-font-weight: bold;" +
+    "-fx-font-size: 22px;" +
+    "-fx-background-radius: 10;" +
+    "-fx-text-fill: black;" +   // ✅ TEXT COLOR BLACK
+    "-fx-padding: 12 20 12 20;"
+);
+
+heading.setBackground(
+    new Background(
+        new BackgroundFill(
+            javafx.scene.paint.LinearGradient.valueOf(
+                "linear-gradient(to right, #4caf50, #2196f3)"
+            ),
+            new CornerRadii(10),
+            Insets.EMPTY
+        )
+    )
+);
+
 
         // User info fields styled with padding, font and drop shadow
         TextField nameField = createStyledTextField("Name", UserSession.getLoggedInUser(stage).getName());
@@ -104,12 +121,7 @@ public class UserDashboardController {
             UIUtil.switchScene(stage, new UserLoginController(stage).getScene());
         });
 
-        Button goBackBtn = createStyledButton("⏪ Go Back", "#6b7280", "#374151");
-        goBackBtn.setPrefWidth(200);
-        goBackBtn.setPrefHeight(50);
-        goBackBtn.setOnAction(e -> UIUtil.switchScene(stage, new UserLoginController(stage).getScene()));
-
-        buttonsBox.getChildren().addAll(issueBtn, returnBtn, goBackBtn, logoutBtn);
+        buttonsBox.getChildren().addAll(issueBtn, returnBtn, logoutBtn);
 
         if (courseField != null) {
             contentBox.getChildren().addAll(heading, nameField, emailField, mobileField, idField, courseField, buttonsBox);
@@ -127,7 +139,7 @@ public class UserDashboardController {
         tf.setPromptText(label);
         tf.setPrefWidth(350);
         tf.setPadding(new Insets(8, 12, 8, 12));
-        tf.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-text-fill: #1e293b;");
+        tf.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
         tf.setFocusTraversable(false);
         tf.setEffect(new DropShadow(BlurType.GAUSSIAN, Color.rgb(0,0,0,0.04), 4, 0, 0, 1));
         return tf;

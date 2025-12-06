@@ -20,8 +20,8 @@ public class UserDAO {
      * @return a User object if authentication succeeds, null otherwise
      */
     public User loginByRfid(String rfid) {
-        // First, try to find in students table
-        String studentSql = "SELECT * FROM students WHERE rfid = ? AND active = TRUE";
+        // First, try to find in students table (case-insensitive)
+        String studentSql = "SELECT * FROM students WHERE LOWER(rfid) = LOWER(?) AND active = TRUE";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(studentSql)) {
             stmt.setString(1, rfid);
             ResultSet rs = stmt.executeQuery();
@@ -42,8 +42,8 @@ public class UserDAO {
             throw new RuntimeException("Database error: " + e.getMessage());
         }
 
-        // If not found in students, try faculty table
-        String facultySql = "SELECT * FROM faculty WHERE rfid = ? AND active = TRUE";
+        // If not found in students, try faculty table (case-insensitive)
+        String facultySql = "SELECT * FROM faculty WHERE LOWER(rfid) = LOWER(?) AND active = TRUE";
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(facultySql)) {
             stmt.setString(1, rfid);
             ResultSet rs = stmt.executeQuery();
@@ -59,8 +59,8 @@ public class UserDAO {
                 u.setActive(rs.getBoolean("active"));
                 return u;
             } else {
-                // Check if RFID exists but is inactive in faculty
-                String checkSql = "SELECT active FROM faculty WHERE rfid = ?";
+                // Check if RFID exists but is inactive in faculty (case-insensitive)
+                String checkSql = "SELECT active FROM faculty WHERE LOWER(rfid) = LOWER(?)";
                 try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
                     checkStmt.setString(1, rfid);
                     ResultSet checkRs = checkStmt.executeQuery();
@@ -70,7 +70,7 @@ public class UserDAO {
                             throw new RuntimeException("Account is inactive. Please contact administrator.");
                         }
                     } else {
-                        throw new RuntimeException("RFID not found in database.");
+                        throw new RuntimeException("RFID not found in database. Sample RFIDs: RFID001 (Student), RFID002 (Student), RFID003 (Faculty), RFID004 (Faculty)");
                     }
                 }
             }

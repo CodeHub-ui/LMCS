@@ -30,4 +30,19 @@ public class LogDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return logs;
     }
+
+    public void deleteAllLogs() {
+        String sql = "DELETE FROM logs";
+        try (Connection conn = DatabaseUtil.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void deleteLogsByIds(List<Integer> ids) {
+        if (ids.isEmpty()) return;
+        String sql = "DELETE FROM logs WHERE id IN (" + String.join(",", ids.stream().map(String::valueOf).toArray(String[]::new)) + ")";
+        try (Connection conn = DatabaseUtil.getConnection(); Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
 }

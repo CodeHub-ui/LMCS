@@ -48,11 +48,14 @@ public class FacultyDAO {
     }
 
     public List<Faculty> searchFaculty(String query) {
-        String sql = "SELECT * FROM faculty WHERE name LIKE ? OR faculty_id LIKE ?";
+        String sql = "SELECT * FROM faculty WHERE LOWER(name) LIKE LOWER(?) OR LOWER(faculty_id) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?) OR LOWER(mobile) LIKE LOWER(?)";
         List<Faculty> faculty = new ArrayList<>();
         try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, "%" + query + "%");
-            stmt.setString(2, "%" + query + "%");
+            String searchPattern = query + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
+            stmt.setString(4, searchPattern);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Faculty f = new Faculty();

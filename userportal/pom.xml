@@ -6,15 +6,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.library</groupId>
-    <artifactId>UserPortal</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>com.library</groupId>
+        <artifactId>library-management-system</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
-    <properties>
-        <java.version>21</java.version>
-        <javafx.version>21.0.2</javafx.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <artifactId>UserPortal</artifactId>
 
     <dependencies>
         <!-- ✅ JavaFX (include platform-specific libraries) -->
@@ -71,7 +70,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
-                    <release>${java.version}</release>
+                    <release>21</release>
                 </configuration>
             </plugin>
 
@@ -96,15 +95,7 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.library.UserPortalMain</mainClass>
-                    <launcher>UserPortal</launcher>
-                    <jlinkZipName>UserPortal</jlinkZipName>
-                    <stripNativeCommands>false</stripNativeCommands>
-                <jvmArgs>
-                    <jvmArg>-Xmx1g</jvmArg>
-                    <jvmArg>-Xms512m</jvmArg>
-                    <jvmArg>-XX:MetaspaceSize=128m</jvmArg>
-                    <jvmArg>-XX:MaxMetaspaceSize=256m</jvmArg>
-                </jvmArgs>
+                    <classpath>${project.build.outputDirectory};${maven.dependency.classpath}</classpath>
                 </configuration>
             </plugin>
 

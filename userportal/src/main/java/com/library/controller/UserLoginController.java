@@ -39,12 +39,13 @@ public class UserLoginController {
      */
     public Scene getScene() {
         StackPane mainLayout = new StackPane();
-        mainLayout.setStyle("-fx-background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80'); -fx-background-size: cover; -fx-background-position: center center;");
+        mainLayout.setStyle(UILayoutConstants.FULL_BACKGROUND_STYLE);
 
         VBox contentBox = new VBox(20);
         contentBox.setPadding(UILayoutConstants.PADDING);
         contentBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.92); -fx-background-radius: 15;");
         contentBox.setMaxWidth(400);
+        contentBox.setMaxHeight(600);
         contentBox.setAlignment(Pos.CENTER);
 
         DropShadow shadow = new DropShadow();
@@ -53,23 +54,22 @@ public class UserLoginController {
         shadow.setRadius(16);
         contentBox.setEffect(shadow);
 
-        Label heading = new Label("User Portal Login");
+
+        Label heading = new Label("USER LOGIN");
         heading.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
 
         TextField rfidField = new TextField();
-        rfidField.setPromptText("Scan RFID Card");
+        rfidField.setPromptText("Tap your card");
         rfidField.setPrefWidth(350);
         rfidField.setPadding(new javafx.geometry.Insets(12));
         rfidField.setStyle("-fx-background-color: white; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #d1d5db; -fx-font-size: 14; -fx-text-fill: #1e293b;");
         rfidField.setFocusTraversable(true);
 
-        Button loginBtn = UIUtil.createStyledButton("Login", "#1f7aec", "#0f62fe");
-        loginBtn.setPrefWidth(350);
-        loginBtn.setPrefHeight(50);
-        loginBtn.setOnAction(e -> {
-            String rfid = rfidField.getText();
-            if (rfid.trim().isEmpty()) {
-                UIUtil.showAlert("Error", "Please scan your RFID card.", Alert.AlertType.ERROR);
+        // Method to perform login
+        Runnable performLogin = () -> {
+            String rfid = rfidField.getText().trim();
+            if (rfid.isEmpty()) {
+                UIUtil.showAlert("Error", "Please Tap your RFID card.", Alert.AlertType.ERROR);
                 return;
             }
             try {
@@ -87,11 +87,24 @@ public class UserLoginController {
                 UIUtil.showAlert("Error", "An error occurred during login.", Alert.AlertType.ERROR);
                 ex.printStackTrace();
             }
+        };
+
+        // Automatic login when RFID reaches expected length (e.g., 10 characters for sample data)
+        rfidField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.length() == 10) { // Assuming RFID length is 10 characters like RFID001001N
+                // Use Platform.runLater to avoid triggering another change event during current event processing
+                javafx.application.Platform.runLater(() -> performLogin.run());
+            }
         });
+
+        Button loginBtn = UIUtil.createStyledButton("Login", "#1f7aec", "#0f62fe");
+        loginBtn.setPrefWidth(350);
+        loginBtn.setPrefHeight(50);
+        loginBtn.setOnAction(e -> performLogin.run());
 
         rfidField.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER) {
-                loginBtn.fire();
+                performLogin.run();
             }
         });
 

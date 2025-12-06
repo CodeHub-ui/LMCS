@@ -8,8 +8,8 @@ public class MobileNumberUniquenessTest {
 
     @Test
     public void testValidMobileNumber() {
-        // Test valid 10-digit mobile number
-        String result = MobileNumberValidator.validateMobileNumberUniqueness("1234567890");
+        // Test valid 10-digit mobile number that should be unique
+        String result = MobileNumberValidator.validateMobileNumberUniqueness("9999999999");
         assertEquals("", result, "Valid mobile number should return empty string");
     }
 

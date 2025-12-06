@@ -80,14 +80,19 @@ public class DatabaseUtil {
             stmt.execute("CREATE TABLE IF NOT EXISTS issued_books (" +
                     "id SERIAL PRIMARY KEY, " +
                     "student_id INT REFERENCES students(id), " +
+                    "faculty_id INT REFERENCES faculty(id), " +
                     "book_id INT REFERENCES books(id), " +
                     "issue_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS returned_books (" +
                     "id SERIAL PRIMARY KEY, " +
                     "student_id INT REFERENCES students(id), " +
+                    "faculty_id INT REFERENCES faculty(id), " +
                     "book_id INT REFERENCES books(id), " +
                     "return_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+
+            // Add faculty_id column if it doesn't exist (for backward compatibility)
+            stmt.execute("ALTER TABLE returned_books ADD COLUMN IF NOT EXISTS faculty_id INT REFERENCES faculty(id)");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS logs (" +
                     "id SERIAL PRIMARY KEY, " +

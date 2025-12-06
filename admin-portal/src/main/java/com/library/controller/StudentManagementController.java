@@ -152,9 +152,10 @@ public class StudentManagementController {
         rightSide.setPadding(new Insets(20));
         rightSide.setAlignment(Pos.TOP_LEFT);
         rightSide.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, 0, 4); -fx-pref-width: 600;");
+        rightSide.setFocusTraversable(false);
 
         searchField.setPromptText("Search students...");
-        searchField.setStyle("-fx-background-radius: 8; -fx-padding: 8 12 8 12; -fx-pref-width: 300;");
+        searchField.setStyle("-fx-background-radius: 8; -fx-padding: 8 12 8 12; -fx-pref-width: 300; -fx-font-weight: bold;");
         searchField.textProperty().addListener((observable, oldValue, newValue) -> filterStudents(newValue));
 
         Label tableTitle = new Label("Students");
@@ -162,8 +163,14 @@ public class StudentManagementController {
 
         setupStudentTable();
         setupStudentTableContextMenu();
+        studentTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         studentTable.setItems(students);
-        studentTable.setOnMouseClicked(e -> selectStudent());
+        studentTable.setOnMouseClicked(e -> {
+            studentTable.requestFocus();
+            if (e.getClickCount() == 1 && studentTable.getSelectionModel().getSelectedItems().size() == 1) {
+                selectStudent();
+            }
+        });
 
         rightSide.getChildren().addAll(searchField, tableTitle, studentTable);
 
@@ -307,34 +314,46 @@ public class StudentManagementController {
 
     private void setupStudentTableContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
-        MenuItem deleteItem = new MenuItem("Delete");
+        MenuItem deleteItem = new MenuItem("Delete Selected");
         deleteItem.setOnAction(e -> deleteStudent());
         contextMenu.getItems().add(deleteItem);
         studentTable.setContextMenu(contextMenu);
     }
 
     private void deleteStudent() {
-        Student selected = studentTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            UIUtil.showAlert("Error", "Please select a student to delete", Alert.AlertType.ERROR);
+        ObservableList<Student> selectedStudents = studentTable.getSelectionModel().getSelectedItems();
+        if (selectedStudents.isEmpty()) {
+            UIUtil.showAlert("Error", "Please select students to delete", Alert.AlertType.ERROR);
             return;
         }
 
+        String message = selectedStudents.size() == 1
+            ? "Are you sure you want to delete this student?"
+            : "Are you sure you want to delete " + selectedStudents.size() + " selected students?";
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Student");
-        alert.setHeaderText("Are you sure you want to delete this student?");
+        alert.setTitle("Delete Student" + (selectedStudents.size() > 1 ? "s" : ""));
+        alert.setHeaderText(message);
         alert.setContentText("This action cannot be undone.");
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                if (studentDAO.deleteStudent(selected.getId())) {
-                    loadStudents();
-                    clearForm();
-                    UIUtil.showAlert("Success", "Student deleted successfully", Alert.AlertType.INFORMATION);
-
-                    // Send deletion notification email
-                    emailService.sendStudentDeletionNotification(selected.getEmail(), selected.getName());
+                int deletedCount = 0;
+                int failedCount = 0;
+                for (Student student : selectedStudents) {
+                    if (studentDAO.deleteStudent(student.getId())) {
+                        deletedCount++;
+                        // Send deletion notification email
+                        emailService.sendStudentDeletionNotification(student.getEmail(), student.getName());
+                    } else {
+                        failedCount++;
+                    }
+                }
+                loadStudents();
+                clearForm();
+                if (deletedCount > 0) {
+                    UIUtil.showAlert("Success", deletedCount + " student" + (deletedCount > 1 ? "s" : "") + " deleted successfully" +
+                        (failedCount > 0 ? ". " + failedCount + " failed (students with issued books)." : ""), Alert.AlertType.INFORMATION);
                 } else {
-                    UIUtil.showAlert("Error", "Cannot delete student with issued books", Alert.AlertType.ERROR);
+                    UIUtil.showAlert("Error", "Cannot delete students with issued books", Alert.AlertType.ERROR);
                 }
             }
         });
