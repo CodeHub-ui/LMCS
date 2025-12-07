@@ -1,96 +1,112 @@
-# ALMS – Automated Library Management System
+# 📚 ALMS – Automated Library Management System
 
-ALMS is a Java-based desktop application developed to automate and manage library operations efficiently.  
-The system consists of two separate portals: **Admin Portal** and **User Portal**, both connected to a centralized database.
+ALMS is a Java-based desktop application designed to automate and modernize library operations.  
+The system supports **barcode-based book scanning** and **RFID card-based user authentication**, making library transactions faster and more secure.
 
-This project follows industry-level practices such as MVC architecture, secure authentication, and structured database communication.
-
----
-
-## Project Overview
-
-Traditional library management involves manual tracking of books, users, and issue-return records, which often leads to errors and delays.  
-ALMS solves this problem by providing a fully digital system where administrators manage the library and users interact with it through controlled access.
-
-The project is developed for academic and practical learning purposes with real-world implementation logic.
+The application consists of two independent portals: **🛠️ Admin Portal** and **👤 User Portal**, connected to a centralized database.
 
 ---
 
-## System Architecture
+## 📌 Project Overview
 
-- Desktop application built using JavaFX  
-- Separate Admin and User portals  
-- Centralized MySQL database  
-- MVC (Model–View–Controller) architecture  
-- Secure authentication and session handling  
+Traditional library systems rely heavily on manual data entry, which is time-consuming and error-prone.  
+ALMS eliminates this by introducing:
+- 📷 **Barcode scanning for books**
+- 🪪 **RFID card based user login**
 
----
-
-## Technology Stack
-
-- Language: Java  
-- UI Framework: JavaFX  
-- Database: MySQL  
-- Database Connectivity: JDBC  
-- Build Tool: Maven  
-- Architecture Pattern: MVC  
-- Security: BCrypt password encryption  
-- Email Service: Jakarta Mail API  
+Admins manage the complete system, while users interact through a secure and automated process.
 
 ---
 
-## Modules and Features
+## 🏗️ System Architecture
 
-### Admin Portal
-
-The Admin Portal provides full control over the library system.
-
-Features include:
-- Admin login and profile management  
-- Dashboard with system statistics  
-- Book management (add, update, delete, categorize)  
-- Student and faculty management  
-- Book issue and return tracking  
-- Advanced search and monitoring  
-- Password reset using email verification  
+- 🖥️ JavaFX-based desktop application  
+- 🔐 Separate Admin and User portals  
+- 🗄️ Centralized MySQL database  
+- 🧩 MVC (Model–View–Controller) architecture  
+- 📷 Barcode scanner integration  
+- 🪪 RFID-based user authentication  
+- 🔒 Secure session handling  
 
 ---
 
-### User Portal
+## 🛠️ Technology Stack
 
-The User Portal is designed for students and faculty members.
-
-Features include:
-- Secure user login  
-- Dashboard showing available and issued books  
-- Book search and availability checking  
-- Book issue request and issue history  
-- Book return request  
-- Profile viewing and limited updates  
+- 🟦 **Language:** Java  
+- 🎨 **UI Framework:** JavaFX  
+- 🗄️ **Database:** MySQL  
+- 🔗 **Database Connectivity:** JDBC  
+- 📦 **Build Tool:** Maven  
+- 🧩 **Architecture:** MVC  
+- 🔐 **Security:** BCrypt password hashing  
+- ✉️ **Email Service:** Jakarta Mail API  
+- 📷 **Hardware Integration:** Barcode Scanner & RFID Reader  
 
 ---
 
-## Project Structure
+## 📂 Modules and Features
+
+### 🛠️ Admin Portal
+
+The Admin Portal gives administrators complete control.
+
+✅ Key Features:
+- 🔐 Admin login and secure session handling  
+- 📊 Dashboard with system statistics  
+- 📚 Book management using **barcode scanning**  
+- 👥 Student and faculty management  
+- 🔄 Book issue and return tracking  
+- 🔍 Advanced search and monitoring  
+- ✉️ Password reset via email verification  
+
+> Admins can scan book barcodes to instantly fetch or store book details, reducing manual errors.
+
+---
+
+### 👤 User Portal
+
+The User Portal is designed for library users.
+
+✅ Key Features:
+- 🪪 **RFID card-based login** (no manual username/password)  
+- 📊 Dashboard showing issued and available books  
+- 🔍 Book search and availability check  
+- 📥 Automated book issue using barcode scan  
+- 📤 Fast return process  
+- 🧾 Profile viewing and borrowing history  
+
+> Users authenticate themselves by tapping their RFID card, enabling quick and secure access.
+
+---
+
+## 🔐 Automation & Smart Features
+
+- 📷 Barcode scanning for book identification  
+- 🪪 RFID-based user authentication  
+- ⚡ Reduced manual data entry  
+- ❌ Minimizes human errors  
+- ⏱️ Faster issue and return workflow  
+
+---
+
+## 🗂️ Project Structure
 
 ```text
 ALMS/
 ├── admin-portal/
-│   ├── controller/        # Admin-side UI controllers
-│   ├── dao/               # Database access logic (JDBC)
-│   ├── model/             # Entity and data models
-│   ├── util/              # Utility and helper classes
-│   └── Main.java          # Admin application entry point
+│   ├── controller/        # 🛠️ Admin-side UI controllers
+│   ├── dao/               # 🗄️ Database access logic (JDBC)
+│   ├── model/             # 📦 Entity and data models
+│   ├── util/              # ⚙️ Utility and hardware helpers
+│   └── Main.java          # ▶️ Admin application entry point
 │
 ├── user-portal/
-│   ├── controller/        # User-side UI controllers
-│   ├── dao/               # Database access logic (JDBC)
-│   ├── model/             # Entity and data models
-│   ├── util/              # Utility and helper classes
-│   └── Main.java          # User application entry point
+│   ├── controller/        # 👤 User-side UI controllers
+│   ├── dao/               # 🗄️ Database access logic (JDBC)
+│   ├── model/             # 📦 Entity and data models
+│   ├── util/              # ⚙️ RFID and utility helpers
+│   └── Main.java          # ▶️ User application entry point
 │
-├── database/              # Database schema / SQL files
-├── pom.xml                # Maven configuration file
-
-
-
-
+├── database/              # 🗃️ Database schema / SQL files
+├── pom.xml                # 📦 Maven configuration file
+ 
