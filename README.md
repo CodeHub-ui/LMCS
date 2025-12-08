@@ -151,7 +151,7 @@ Feel free to reach out to the team 👇
 - 👥 **Project Team:** ALMS Development Team  
 - 📌 **Project:** ALMS – Automated Library Management System  
 - 📧 **Email:** mrharshitgupta81@gmail.com  
-- 🌐 **GitHub Repository:** https://github.com/your-username  
+- 🌐 **GitHub Repository:** https://github.com/CodeHub-ui 
 
 ---
 
