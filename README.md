@@ -1,31 +1,58 @@
 # 📚 ALMS – Automated Library Management System
 
-ALMS is a Java-based desktop application designed to automate and modernize library operations.  
-The system supports **barcode-based book scanning** and **RFID card-based user authentication**, making library transactions faster and more secure.
+ALMS (Automated Library Management System) is a Java-based desktop application developed to automate and modernize library operations.  
+The system integrates **barcode-based book scanning** and **RFID card-based user authentication**, enabling fast, secure, and error-free library transactions.
 
-The application consists of two independent portals: **🛠️ Admin Portal** and **👤 User Portal**, connected to a centralized database.
+The project consists of **two independent desktop applications**:
+- 🛠️ **Admin Portal (EXE)**
+- 👤 **User Portal (EXE)**
+
+A lightweight **website is used only as a distribution platform** to download and install these desktop portals easily.
 
 ---
 
 ## 📌 Project Overview
 
-Traditional library systems rely heavily on manual data entry, which is time-consuming and error-prone.  
-ALMS eliminates this by introducing:
-- 📷 **Barcode scanning for books**
-- 🪪 **RFID card based user login**
+Traditional library systems rely heavily on manual book handling and user verification, which is time-consuming and prone to errors.  
+ALMS automates the entire library workflow by combining desktop applications with hardware integration.
 
-Admins manage the complete system, while users interact through a secure and automated process.
+### ✅ Key Highlights
+- 📷 Barcode-based book scanning  
+- 🪪 RFID card-based user authentication  
+- 🖥️ Separate Admin and User desktop applications  
+- 🌐 Website used as a centralized download hub  
+
+> Note: The website does **not** perform any library operations.  
+> All core functionalities are handled by the desktop applications.
+
+---
+
+## 🌐 Website Role (Important)
+
+The website included in the project is used **only for distribution purposes**.
+
+### ✅ Website Responsibilities
+- Provides download links for:
+  - 🛠️ Admin Portal (`Admin.exe`)
+  - 👤 User Portal (`User.exe`)
+- Helps install the application on multiple systems
+- Acts as a central access point for updated builds
+
+### ❌ Website Does NOT
+- Manage users or books  
+- Connect to the database  
+- Perform issue or return actions  
 
 ---
 
 ## 🏗️ System Architecture
 
-- 🖥️ JavaFX-based desktop application  
-- 🔐 Separate Admin and User portals  
+- 🖥️ JavaFX-based desktop applications  
+- 🔐 Role-based access (Admin / User)  
 - 🗄️ Centralized MySQL database  
 - 🧩 MVC (Model–View–Controller) architecture  
 - 📷 Barcode scanner integration  
-- 🪪 RFID-based user authentication  
+- 🪪 RFID-based authentication  
 - 🔒 Secure session handling  
 
 ---
@@ -40,42 +67,43 @@ Admins manage the complete system, while users interact through a secure and aut
 - 🧩 **Architecture:** MVC  
 - 🔐 **Security:** BCrypt password hashing  
 - ✉️ **Email Service:** Jakarta Mail API  
-- 📷 **Hardware Integration:** Barcode Scanner & RFID Reader  
+- 📷 **Hardware:** Barcode Scanner  
+- 🪪 **Hardware:** RFID Reader  
+- 🌐 **Website:** HTML / CSS  
 
 ---
 
 ## 📂 Modules and Features
 
-### 🛠️ Admin Portal
+### 🛠️ Admin Portal (Desktop EXE)
 
-The Admin Portal gives administrators complete control.
+The Admin Portal provides complete control over library operations.
 
-✅ Key Features:
-- 🔐 Admin login and secure session handling  
-- 📊 Dashboard with system statistics  
-- 📚 Book management using **barcode scanning**  
-- 👥 Student and faculty management  
-- 🔄 Book issue and return tracking  
-- 🔍 Advanced search and monitoring  
-- ✉️ Password reset via email verification  
+**Features:**
+- Secure admin login and session handling  
+- Dashboard with library statistics  
+- Book management using barcode scanning  
+- Student and faculty management  
+- Issue and return tracking  
+- Advanced search and monitoring  
+- Email-based password reset  
 
-> Admins can scan book barcodes to instantly fetch or store book details, reducing manual errors.
+> Barcodes allow admins to instantly fetch or store book information, reducing manual work.
 
 ---
 
-### 👤 User Portal
+### 👤 User Portal (Desktop EXE)
 
-The User Portal is designed for library users.
+The User Portal is designed for library members.
 
-✅ Key Features:
-- 🪪 **RFID card-based login** (no manual username/password)  
-- 📊 Dashboard showing issued and available books  
-- 🔍 Book search and availability check  
-- 📥 Automated book issue using barcode scan  
-- 📤 Fast return process  
-- 🧾 Profile viewing and borrowing history  
+**Features:**
+- RFID card-based login (no username/password)  
+- View available and issued books  
+- Automated issue and return process  
+- Borrowing history  
+- User profile view  
 
-> Users authenticate themselves by tapping their RFID card, enabling quick and secure access.
+> Users authenticate by tapping their RFID card for quick and secure access.
 
 ---
 
@@ -84,7 +112,7 @@ The User Portal is designed for library users.
 - 📷 Barcode scanning for book identification  
 - 🪪 RFID-based user authentication  
 - ⚡ Reduced manual data entry  
-- ❌ Minimizes human errors  
+- ❌ Minimal human errors  
 - ⏱️ Faster issue and return workflow  
 
 ---
@@ -94,19 +122,48 @@ The User Portal is designed for library users.
 ```text
 ALMS/
 ├── admin-portal/
-│   ├── controller/        # 🛠️ Admin-side UI controllers
-│   ├── dao/               # 🗄️ Database access logic (JDBC)
-│   ├── model/             # 📦 Entity and data models
-│   ├── util/              # ⚙️ Utility and hardware helpers
-│   └── Main.java          # ▶️ Admin application entry point
+│   ├── controller/        # Admin-side UI controllers
+│   ├── dao/               # Database access logic
+│   ├── model/             # Entity and data models
+│   ├── util/              # Utility and hardware helpers
+│   └── Main.java          # Admin application entry point
 │
 ├── user-portal/
-│   ├── controller/        # 👤 User-side UI controllers
-│   ├── dao/               # 🗄️ Database access logic (JDBC)
-│   ├── model/             # 📦 Entity and data models
-│   ├── util/              # ⚙️ RFID and utility helpers
-│   └── Main.java          # ▶️ User application entry point
+│   ├── controller/        # User-side UI controllers
+│   ├── dao/               # Database access logic
+│   ├── model/             # Entity and data models
+│   ├── util/              # RFID utilities
+│   └── Main.java          # User application entry point
 │
-├── database/              # 🗃️ Database schema / SQL files
-├── pom.xml                # 📦 Maven configuration file
- 
+├── database/              # SQL schema and scripts
+├── website/               # EXE download website (index.html)
+├── pom.xml                # Maven configuration
+
+```
+---
+
+## 📬✨ Contact
+
+Have questions, feedback, or ideas to improve this project?  
+Feel free to reach out to the team 👇
+
+- 👨‍💼 **Project Lead:** Harshit Gupta  
+- 👥 **Project Team:** ALMS Development Team  
+- 📌 **Project:** ALMS – Automated Library Management System  
+- 📧 **Email:** mrharshitgupta81@gmail.com  
+- 🌐 **GitHub Repository:** https://github.com/your-username  
+
+---
+
+## 🎉🙏 Thank You
+
+Thank you for checking out **ALMS – Automated Library Management System** 📚✨  
+
+This project was built as a **team effort under the guidance of the Project Lead**, focusing on:
+- ⚡ Automation using Barcode & RFID  
+- 🔐 Secure and role-based system design  
+- 🖥️ JavaFX desktop application development  
+- 🗄️ Real-world database handling  
+
+Your time, feedback, and suggestions are highly appreciated 💙  
+Happy coding and learning 🚀😄
